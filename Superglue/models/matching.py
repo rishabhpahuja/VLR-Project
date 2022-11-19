@@ -54,14 +54,14 @@ class Matching(torch.nn.Module):
         self.superpoint = SuperPoint(config.get('superpoint', {}))
         self.superglue = SuperGlue(config.get('superglue', {}))
 
-    def forward(self, data1,data2):
+    def forward(self, data1,data2=None):
         """ Run SuperPoint (optionally) and SuperGlue
         SuperPoint is skipped if ['keypoints0', 'keypoints1'] exist in input
         Args:
-          data: dictionary with minimal keys: ['image0', 'image1']
+          data1: dictionary with minimal keys: ['image0', 'image1']. Images are croppped to have only fruits
+          data2: dictionary with minimal keys: ['image0', 'image1']. Orignal Images are used
         """
         pred = {}
-
         # Extract SuperPoint (keypoints, scores, descriptors) if not provided
         if 'keypoints0' not in data1:
             pred0 = self.superpoint({'image': data1['image0']})
@@ -73,7 +73,14 @@ class Matching(torch.nn.Module):
         # Batch all features
         # We should either have i) one image per batch, or
         # ii) the same number of local features for all images in the batch.
-        data = {**data2, **pred}
+        # data1 includes only fruits and data2 includes only images
+        # data2 is used in data and data 1 in keypoints so that keypoints are found only inside the boxes while in data data 2 is used so that full images can
+        # be used to draw the matches
+        if data2 is not None:
+            data = {**data2, **pred}
+        
+        else:
+            data = {**data1, **pred}
 
         for k in data:
             if isinstance(data[k], (list, tuple)):

@@ -160,11 +160,17 @@ class SuperMatching():
         # Convert the image pair.
         inp1 = frame2tensor(img1, self.device)
         inp2 = frame2tensor(img2, self.device)
-        inp3 = frame2tensor(img3, self.device)
-        inp4 = frame2tensor(img4, self.device)
+        
+        if img2 is not None:
+            inp3 = frame2tensor(img3, self.device)
+            inp4 = frame2tensor(img4, self.device)
+            pred = self.matching({'image0': inp1, 'image1': inp2},{'image0': inp3, 'image1': inp4})
+        
+        else:
+            pred = self.matching({'image0': inp1, 'image1': inp2})            
 
         # Perform the matching.
-        pred = self.matching({'image0': inp1, 'image1': inp2},{'image0': inp3, 'image1': inp4})
+        
         pred = {k: v[0].cpu().numpy() for k, v in pred.items()}
         kpts0, kpts1 = pred['keypoints0'], pred['keypoints1']
         matches, conf = pred['matches0'], pred['matching_scores0']
@@ -203,8 +209,9 @@ class SuperMatching():
         title = 'Test'
         # path ='results/superglue_matching.jpg'
         path = save_path
+        # import ipdb; ipdb.set_trace()
         make_matching_plot_fast(image0, image1, kpts0, kpts1, mkpts0,
-                            mkpts1, colours, path, True, 0, True, title,conf)
+                            mkpts1, colours, path, True, 0, False, title,conf)
         # make_matching_plot(image0, image1, kpts0, kpts1, mkpts0, mkpts1,
         #                color, text, path, show_keypoints=False,
         #                fast_viz=False, opencv_display=False,

@@ -66,30 +66,40 @@ def find_conf_values(rect,matches,conf_score,pos,conf):
         conf_score[pos]=round(conf_score[pos]/k,3)
     return conf_score
 
-
+def SuperGlueDetection_deep_sort():
+    
+    mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
+    pass
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
     
     img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
     img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
 
-    image_mask1=np.zeros(img1_gray.shape,np.uint8)
-    for i in range(len(rect1)):
-        image_mask1[rect1.at[i,1]:rect1.at[i,3],rect1.at[i,0]:rect1.at[i,2]]=255
-    img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1)
+    if rect1 is not None:
+        image_mask1=np.zeros(img1_gray.shape,np.uint8)
+        for i in range(len(rect1)):
+            image_mask1[rect1.at[i,1]:rect1.at[i,3],rect1.at[i,0]:rect1.at[i,2]]=255
+        img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1)
 
-    image_mask2=np.zeros(img1_gray.shape,np.uint8)
-    for i in range(len(rect2)):
-        image_mask2[rect2.at[i,1]:rect2.at[i,3],rect2.at[i,0]:rect2.at[i,2]]=255
-    img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1)
+    if rect2 is not None:
+        image_mask2=np.zeros(img1_gray.shape,np.uint8)
+        for i in range(len(rect2)):
+            image_mask2[rect2.at[i,1]:rect2.at[i,3],rect2.at[i,0]:rect2.at[i,2]]=255
+        img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1)
 
-    mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
+    if rect1 is not None:
+        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
+    
+    else:
+        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray,img2_gray)
     
     #! Show matched keypoints
     for x,y in kp1.astype(np.int64):
         cv2.circle(img1, (x,y), 2, (255,0,0), -1)
         cv2.circle(img2, (x,y), 2, (0,0,255), -1)
-    # for x,y in kp2.astype(np.int64):
+    # for x,y in kp2.astype(np.int64): import ipdb; ipdb.set_trace()
 
+    # import ipdb; ipdb.set_trace()
     
     # Show matches
     colours=dict()
@@ -97,7 +107,6 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
     if debug:
         colour=np.array((sns.color_palette(None,len(rect1))))
         colour=list(np.asarray(colour*255,'uint8'))
-
 
         for i in range(len(rect1)):
 
@@ -108,7 +117,7 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
             cv2.rectangle(img1,(rect1.loc[i,0],rect1.loc[i,1]),(rect1.loc[i,2],rect1.loc[i,3]),(int(colour[j][0]),int(colour[j][1]),int(colour[j][2])),3)        
             cv2.putText(img1,str(conf_score[j]),org=(rect1.loc[i,0],rect1.loc[i,1]-2),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=0.5,color=(int(colour[j][0]),int(colour[j][1]),int(colour[j][2])),thickness=2)
             colours[j]=((rect1.loc[i,0],rect1.loc[i,1],rect1.loc[i,2],rect1.loc[i,3]),list(colour[j]))
-
+        # import ipdb; ipdb.set_trace()
         sg_matching.plot_matches(img1, img2, kp1, kp2, matches1, matches2,rect1, colours,mconf)
     
     return kp1, kp2, matches1, matches2
@@ -270,14 +279,14 @@ def test_two(args):
     # ref=adjust_contrast(ref) 
     align = cv2.imread(align_path, 1)
     # align=adjust_contrast(align)
-    rect1=pd.read_csv('../detections2/L0085.csv', header=None)
-    rect2=pd.read_csv('../detections2/L0086.csv', header=None)
+    rect1=pd.read_csv('./data/L0084.csv', header=None)
+    rect2=pd.read_csv('./data/L0085.csv', header=None)
 
     sg_matching = setup_sg_class(args.superglue_weights_path)
     ref_keypoints, align_keypoints, matches1, matches2  = SuperGlueDetection(ref, align, sg_matching,rect1,rect2,debug=True)
 
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
   
 
 
@@ -294,10 +303,10 @@ if __name__ == "__main__":
         
 
     parser.add_argument('-ref', '--reference_path',
-                        type=str, default='./L0085.jpeg',
+                        type=str, default='./data/L0084.jpeg',
                         help='Reference Image')
     parser.add_argument('-align', '--align_path',
-                        type=str, default='./L0086.jpeg',
+                        type=str, default='./data/L0085.jpeg',
                         help='Image to align')
     # parser.add_argument('--superglue', choices={'indoor', 'outdoor', 'custom'}, 
     #                     default='custom',
