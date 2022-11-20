@@ -66,10 +66,28 @@ def find_conf_values(rect,matches,conf_score,pos,conf):
         conf_score[pos]=round(conf_score[pos]/k,3)
     return conf_score
 
-def SuperGlueDetection_deep_sort():
+def crop_image(img,box):
     
-    mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
-    pass
+    cropped_image=img[box[1]-5:box[3]+5,box[0]-5:box[2]+5]
+
+    return cropped_image
+
+def SuperGlueDetection_deep_sort(mg1, img2, rect1, rect2):
+
+    img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
+    img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+    
+    
+    
+    for i in range(len(rect1)):
+        for j in range(len(rect2))
+            mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,rect2.loc[i]),crop_image(img1_gray,rect1.loc[j]))
+            
+
+
+
+        
+
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
     
     img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
