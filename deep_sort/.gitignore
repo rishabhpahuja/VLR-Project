@@ -2,4 +2,4 @@ Tests
 yolov7x.pt
 validate.py
 __pycache__
-backup_V3
+backup_V3/*.weights
