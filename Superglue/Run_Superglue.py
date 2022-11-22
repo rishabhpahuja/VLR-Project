@@ -82,11 +82,7 @@ def SuperGlueDetection_deep_sort(mg1, img2, rect1, rect2):
     for i in range(len(rect1)):
         for j in range(len(rect2))
             mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,rect2.loc[i]),crop_image(img1_gray,rect1.loc[j]))
-            
-
-
-
-        
+                    
 
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
     
