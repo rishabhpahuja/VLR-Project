@@ -128,7 +128,8 @@ class YOLOv7_DeepSORT:
             if count_objects: # has been made true from run_tracker.py
                 cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,255,255), 2)
                 # dislays top-left mein - number of objects being being tracked in the current frame
-                # is it detections or tracks ?? Ask Pahuja - seems like detections only 
+                # is it detections or tracks ?? Ask Pahuja - seems like detections only \
+            
 
             # ---------------------------------- DeepSORT tacker work starts here ------------------------------------------------------------
             # ipdb.set_trace()
