@@ -74,17 +74,40 @@ def crop_image(img,box):
 
     return cropped_image
 
-def SuperGlueDetection_deep_sort(mg1, img2, rect1, rect2):
+def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching):
 
-    img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-    img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+    img1_gray=cv2.cvtColor(frame_t,cv2.COLOR_BGR2GRAY)
+    img2_gray=cv2.cvtColor(frame_t_1,cv2.COLOR_BGR2GRAY)
+
     
     
-    
-    for i in range(len(rect1)):
-        for j in range(len(rect2)):
+    for i in range(len(candidates)):
             mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,rect2.loc[i]),crop_image(img1_gray,rect1.loc[j]))
-        
+
+def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
+             detection_indices=None, superglue_weights_path=None):
+    
+    if superglue_weights_path is None:
+        raise("SuperGlue Weights Path not given")
+    
+    sg_matching=setup_sg_class(superglue_weights_path)
+
+    if track_indices is None:
+        track_indices = np.arange(len(tracks))
+    if detection_indices is None:
+        detection_indices = np.arange(len(detections))
+
+    cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
+    for row, track_idx in enumerate(track_indices):
+        if tracks[track_idx].time_since_update > 1:
+            cost_matrix[row, :] = linear_assignment.INFTY_COST
+            continue
+
+        bbox = tracks[track_idx].to_tlwh()
+        candidates = np.asarray([detections[i].tlwh for i in detection_indices])
+        cost_matrix[row, :] = 1. - sg_conf(bbox, candidates, frame_t,frame_t_1,sg_matching)
+    return cost_matrix
+
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
     # ipdb.set_trace()
     img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY) # (1536, 2048)
