@@ -68,21 +68,28 @@ def find_conf_values(rect,matches,conf_score,pos,conf):
         conf_score[pos]=round(conf_score[pos]/k,3)
     return conf_score
 
-def crop_image(img,box):
+def crop_image(img,(tl,bl)):
     
-    cropped_image=img[box[1]-5:box[3]+5,box[0]-5:box[2]+5]
+    cropped_image=img[tl[1]-5:bl[3]+5,tl[0]-5:bl[2]+5]
 
     return cropped_image
 
 def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching):
 
+    mconf_row=np.zeros((1,len(candidates)))
     img1_gray=cv2.cvtColor(frame_t,cv2.COLOR_BGR2GRAY)
     img2_gray=cv2.cvtColor(frame_t_1,cv2.COLOR_BGR2GRAY)
 
-    
+    bbox_tl, bbox_br = bbox[:2], bbox[:2] + bbox[2:]
+    candidates_tl = candidates[:, :2]
+    candidates_br = candidates[:, :2] + candidates[:, 2:]
     
     for i in range(len(candidates)):
-            mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,rect2.loc[i]),crop_image(img1_gray,rect1.loc[j]))
+            # xmin=
+            mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,(candidates_tl[i],candidates_br[i])),crop_image(img1_gray,(bbox_tl[i],bbox_br[i])))
+            mconf_row[i]=mconf.cpu().numpy().mean()
+    
+    return mconf_row
 
 def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
              detection_indices=None, superglue_weights_path=None):
@@ -105,7 +112,7 @@ def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
 
         bbox = tracks[track_idx].to_tlwh()
         candidates = np.asarray([detections[i].tlwh for i in detection_indices])
-        cost_matrix[row, :] = 1. - sg_conf(bbox, candidates, frame_t,frame_t_1,sg_matching)
+        cost_matrix[row, :] = 1. - Sg_conf(bbox, candidates, frame_t,frame_t_1,sg_matching)
     return cost_matrix
 
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
