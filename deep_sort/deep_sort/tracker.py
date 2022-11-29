@@ -4,6 +4,7 @@ from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
 from .track import Track
+import ipdb
 
 
 class Tracker:
@@ -35,7 +36,7 @@ class Tracker:
         The list of active tracks at the current time step.
 
     """
-
+# done
     def __init__(self, metric, max_iou_distance=0.7, max_age=75, n_init=1):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
@@ -51,7 +52,7 @@ class Tracker:
 
         This function should be called once every time step, before `update`.
         """
-        # import ipdb;ipdb.set_trace
+        # import ipdb;ipdb.set_trace()
         for track in self.tracks:
             track.predict(self.kf)
 
@@ -65,8 +66,8 @@ class Tracker:
 
         """
         # Run matching cascade.
-        matches, unmatched_tracks, unmatched_detections = \
-            self._match(detections)
+        matches, unmatched_tracks, unmatched_detections = self._match(detections)
+        #initially all unmatched - thus, unmatched detctions - [0, 1, 2, 3, 4, 5, 6]
 
         # Update track set.
         for track_idx, detection_idx in matches:
@@ -75,9 +76,11 @@ class Tracker:
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
         for detection_idx in unmatched_detections:
-            self._initiate_track(detections[detection_idx])
+            self._initiate_track(detections[detection_idx]) # saare naye detection ka naya track and id created 
+            # [0, 1, 2, 3, 4, 5, 6]
+
         UNMATCHED_TRACKS=[self.tracks[i] for i in unmatched_tracks]
-        UNMACTHED_DETECTIONS=[detections[i] for i in unmatched_detections]
+        UNMACTHED_DETECTIONS=[detections[i] for i in unmatched_detections] # detctions ka object
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
@@ -96,7 +99,10 @@ class Tracker:
 
     def _match(self, detections):
 
+        # ipdb.set_trace()
+
         def gated_metric(tracks, dets, track_indices, detection_indices):
+            # ipdb.set_trace()
             features = np.array([dets[i].feature for i in detection_indices])
             targets = np.array([tracks[i].track_id for i in track_indices])
             cost_matrix = self.metric.distance(features, targets)
@@ -107,17 +113,14 @@ class Tracker:
             return cost_matrix
 
         # Split track set into confirmed and unconfirmed tracks.
-        # import ipdb;ipdb.set_trace()
-        confirmed_tracks = [
-            i for i, t in enumerate(self.tracks) if t.is_confirmed()]
-        unconfirmed_tracks = [
-            i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
+        # ipdb.set_trace()
+        confirmed_tracks = [i for i, t in enumerate(self.tracks) if t.is_confirmed()]
+        unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
         # Associate confirmed tracks using appearance features.
         matches_a, unmatched_tracks_a, unmatched_detections = \
-            linear_assignment.matching_cascade(
-                gated_metric, self.metric.matching_threshold, self.max_age,
-                self.tracks, detections, confirmed_tracks)
+            linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
+                self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
 
         # Associate remaining tracks together with unconfirmed tracks using IOU.
         iou_track_candidates = unconfirmed_tracks + [
@@ -134,11 +137,11 @@ class Tracker:
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
-
+#done
     def _initiate_track(self, detection):
         mean, covariance = self.kf.initiate(detection.to_xyah())
         class_name = detection.get_class()
         self.tracks.append(Track(
             mean, covariance, self._next_id, self.n_init, self.max_age,
-            detection.feature, class_name))
-        self._next_id += 1
+            detection.feature, class_name)) # track gets initiated and appended 
+        self._next_id += 1 # id updates taken - for each track is unique

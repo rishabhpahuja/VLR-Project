@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import cv2
 import tensorflow.compat.v1 as tf
+import ipdb
 
 #tf.compat.v1.disable_eager_execution()
 
@@ -51,7 +52,7 @@ def _run_in_batches(f, data_dict, out, batch_size):
         batch_data_dict = {k: v[e:] for k, v in data_dict.items()}
         out[e:] = f(batch_data_dict)
 
-
+# done
 def extract_image_patch(image, bbox, patch_shape):
     """Extract image patch from bounding box.
 
@@ -98,14 +99,13 @@ def extract_image_patch(image, bbox, patch_shape):
     image = cv2.resize(image, tuple(patch_shape[::-1]))
     return image
 
-
+#done
 class ImageEncoder(object):
 
-    def __init__(self, checkpoint_filename, input_name="images",
-                 output_name="features"):
+    def __init__(self, checkpoint_filename, input_name="images", output_name="features"):
         self.session = tf.Session()
         with tf.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-            graph_def = tf.GraphDef()
+            graph_def = tf.GraphDef() #protobuf containing graph of operations
             graph_def.ParseFromString(file_handle.read())
         tf.import_graph_def(graph_def, name="net")
         self.input_var = tf.get_default_graph().get_tensor_by_name(
@@ -113,37 +113,42 @@ class ImageEncoder(object):
         self.output_var = tf.get_default_graph().get_tensor_by_name(
             "%s:0" % output_name)
 
-        assert len(self.output_var.get_shape()) == 2
-        assert len(self.input_var.get_shape()) == 4
+        assert len(self.output_var.get_shape()) == 2 # none, 128
+        assert len(self.input_var.get_shape()) == 4 #none, 128,64,3
         self.feature_dim = self.output_var.get_shape().as_list()[-1]
         self.image_shape = self.input_var.get_shape().as_list()[1:]
 
-    def __call__(self, data_x, batch_size=32):
+    def __call__(self, data_x, batch_size=32): #overwrites the default call function
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
         _run_in_batches(
             lambda x: self.session.run(self.output_var, feed_dict=x),
             {self.input_var: data_x}, out, batch_size)
         return out
 
-
-def create_box_encoder(model_filename, input_name="images",
-                       output_name="features", batch_size=32):
+#done
+def create_box_encoder(model_filename, input_name="images",output_name="features", batch_size=32):
     image_encoder = ImageEncoder(model_filename, input_name, output_name)
     image_shape = image_encoder.image_shape
+    # print("Feature Shape (DeepSORT) - ", image_encoder.feature_dim) #128
+    # print("Image Shape (DeepSORT) - ", image_encoder.image_shape) #128,64,3
 
+#done
     def encoder(image, boxes):
+        # ipdb.set_trace()
+        #image shape - 1536,2048,3 - h,w,c
         image_patches = []
         for box in boxes:
-            patch = extract_image_patch(image, box, image_shape[:2])
+            patch = extract_image_patch(image, box, image_shape[:2]) # patch shapes - 128,64,3 - h,w,c
             if patch is None:
                 print("WARNING: Failed to extract image patch: %s." % str(box))
                 patch = np.random.uniform(
                     0., 255., image_shape).astype(np.uint8)
             image_patches.append(patch)
-        image_patches = np.asarray(image_patches)
+        image_patches = np.asarray(image_patches) # length of this is obviously 7 - frame 1
+        #net image_patches - list of 7 detections and each has dim of a patch.
         return image_encoder(image_patches, batch_size)
-
-    return encoder
+    
+    return encoder # returns address or object of the function "encoder"
 
 
 def generate_detections(encoder, mot_dir, output_dir, detection_dir=None):

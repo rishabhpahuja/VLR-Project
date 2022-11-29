@@ -25,18 +25,19 @@ from deep_sort.tracker import Tracker
 # import from helpers
 from tracking_helpers import read_class_names, create_box_encoder
 from detection_helpers import *
+import ipdb
 
 
  # load configuration for object detector
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 
-
-
+prev_frame = None
 class YOLOv7_DeepSORT:
     '''
     Class to Wrap ANY detector  of YOLO type with DeepSORT
     '''
+    #done
     def __init__(self, reID_model_path:str, detector, max_cosine_distance:float=0.4, nn_budget:float=None, nms_max_overlap:float=1.0,
     coco_names_path:str ="./io_data/input/classes/coco.names",  ):
         '''
@@ -54,7 +55,7 @@ class YOLOv7_DeepSORT:
         # self.class_names = read_class_names()
 
         # initialize deep sort
-        self.encoder = create_box_encoder(reID_model_path, batch_size=1)
+        self.encoder = create_box_encoder(reID_model_path, batch_size=1) # becomes the encoder 
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget) # calculate cosine distance metric
         self.tracker = Tracker(metric) # initialize tracker
 
@@ -77,66 +78,80 @@ class YOLOv7_DeepSORT:
 
         out = None
         if output: # get video ready to save locally if flag is set
-            width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))  # by default VideoCapture returns float instead of int
-            height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = int(vid.get(cv2.CAP_PROP_FPS))
-            codec = cv2.VideoWriter_fourcc(*"XVID")
-            out = cv2.VideoWriter(output, codec, fps, (width, height))
+            # print(output) # output folder name and location - ./IO_data/output/street_rp.avi
+            width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))  # by default VideoCapture returns float instead of int # 2048
+            height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)) # 1536
+            fps = int(vid.get(cv2.CAP_PROP_FPS)) # 15
+            codec = cv2.VideoWriter_fourcc(*"XVID") # codec 
+            out = cv2.VideoWriter(output, codec, fps, (width, height)) # writer ka object
+            # print(width, height, fps, codec, out)
 
         frame_num = 0
         while True: # while video is running
             return_value, frame = vid.read()
+            frame_copy = frame.copy()
             if not return_value:
                 print('Video has ended or failed!')
                 break
             frame_num +=1
 
-            if skip_frames and not frame_num % skip_frames: continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
-            if verbose >= 1:start_time = time.time()
+            if skip_frames and not frame_num % skip_frames: 
+                continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
+            if verbose >= 1:
+                start_time = time.time()
 
             # -----------------------------------------PUT ANY DETECTION MODEL HERE -----------------------------------------------------------------
-            if YOLOVER=='V3':
-                    yolo_dets, scores, class_ID=YOLOV3(self.detector,frame)
+            if YOLOVER=='V3': # using V3 only 
+                yolo_dets, scores, class_ID=YOLOV3(self.detector,frame)
+                # print(yolo_dets)
+                # first frame - [[1717, 680, 90, 77], [957, 1072, 79, 92], [1656, 326, 90, 73], [753, 1114, 79, 94], [1219, 231, 96, 76], [815, 471, 77, 76], [1516, 881, 79, 82]]
+                # bounding boxes 
+
+                # print(scores)
+                # confidence level - [0.9174734354019165, 0.8873069882392883, 0.8572289943695068, 0.8180209994316101, 0.7712001800537109, 0.7203170657157898, 0.7065609693527222]
+                # looks like ascending order
+
+                # print(class_ID) # [0, 0, 0, 0, 0, 0, 0] - apple only 
             
             else:
                 yolo_dets = self.detector.detect(frame.copy(), plot_bb = False)  # Get the detections
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # if yolo_dets is None:
-            #     bboxes = []
-            #     scores = []
-            #     classes = []
-            #     num_objects = 0
             
             # ---------------------------------------- DETECTION PART COMPLETED ---------------------------------------------------------------------
             
-            # names = np.array(class_ID)
-            # import ipdb; ipdb.set_trace()
-            count = len(class_ID) #Class number. It will be zero for our case since there is only one class
-            names=np.array(["Apple"]*count)
+            
+            count = len(class_ID) # number of detections - 7 for frame 1
+            #Class number. It will be zero for our case since there is only one class
+            names=np.array(["Apple"]*count) # obviously all 7 are apple
 
 
-            if count_objects:
+            if count_objects: # has been made true from run_tracker.py
                 cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,255,255), 2)
+                # dislays top-left mein - number of objects being being tracked in the current frame
+                # is it detections or tracks ?? Ask Pahuja - seems like detections only 
 
             # ---------------------------------- DeepSORT tacker work starts here ------------------------------------------------------------
-            features = self.encoder(frame, yolo_dets) # encode detections and feed to tracker. [No of BB / detections per frame, embed_size]
-            detections = [Detection(bbox, score, class_name, feature) for bbox, score, class_name, feature in zip(yolo_dets, scores, names, features)] # [No of BB per frame] deep_sort.detection.Detection object
+            # ipdb.set_trace()
+            features = self.encoder(frame, yolo_dets) # encode detections and feed to tracker. [No of BB / detections per frame, embed_size] - 7,128 
+            # features is after the bounding boxes go through the deepsort feature extracting network
+            
+            detections = [Detection(bbox, score, class_name, feature) for bbox, score, class_name, feature in zip(yolo_dets, scores, names, features)] 
+            # [No of BB per frame] deep_sort.detection.Detection object - len = 7
+            # each detection is then taken individually and zipped with related values like scre, name and features.
 
             cmap = plt.get_cmap('tab20b') #initialize color map
-            colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]   
-
+            colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]   # can't detect more than 20 at once ??
+            # each has 3 values
+            # ipdb.set_trace()
             self.tracker.predict()  # Call the tracker
+            # ipdb.set_trace()
             unmatched_tracks,unmatched_detections=self.tracker.update(detections) #  update using Kalman Gain
 
             # import ipdb; ipdb.set_trace()
 
-            # import ipdb;ipdb.set_trace()
-            for track in self.tracker.tracks:  # update new findings AKA tracks
-                
-                
-                if not track.is_confirmed(): #or track.time_since_update > 1:
-                    continue 
+            for track in self.tracker.tracks:  # update new findings AKA tracks  
+                # if not track.is_confirmed(): #or track.time_since_update > 1:
+                #     continue 
                 bbox = track.to_tlbr()
                 class_name = track.get_class()
 
@@ -156,6 +171,7 @@ class YOLOv7_DeepSORT:
                     
             # -------------------------------- Tracker work ENDS here -----------------------------------------------------------------------
             # for track in unmatched_tracks:
+            ipdb.set_trace()
             if verbose >= 1:
                 fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
                 if not count_objects: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)}")
@@ -176,19 +192,25 @@ class YOLOv7_DeepSORT:
             elif frame_num<10:
                 name=dir_path+'00'+str(frame_num)+'.png'
             cv2.imwrite(name,frame)
+            prev_frame = frame_copy
         cv2.destroyAllWindows()
 
 
 def YOLOV3(model, frame):
+    # ipdb.set_trace()
+    blob = cv2.dnn.blobFromImage(frame, 1/255,(416,416),(0,0,0),swapRB = True,crop= False) # 1,3,416,416 - image not cropped but resized
+    # crops image from centre 
+    # normalize by dividing by 255
+    # mean (0,0,0) substraction and swaps red and blue channels 
 
-    blob = cv2.dnn.blobFromImage(frame, 1/255,(416,416),(0,0,0),swapRB = True,crop= False)
-    model.setInput(blob)
+    model.setInput(blob) # sets input
 
-    hight,width,_=frame.shape
+    hight,width,_=frame.shape # 1536,2048
 
-    output_layers_name = model.getUnconnectedOutLayersNames()
+    output_layers_name = model.getUnconnectedOutLayersNames() # ('yolo_82', 'yolo_94', 'yolo_106')
 
-    layerOutputs = model.forward(output_layers_name)
+    layerOutputs = model.forward(output_layers_name) # input ka answer -  3 ka list 
+    # 1. 507,6
 
     boxes= []
     confidences= []
@@ -196,9 +218,9 @@ def YOLOV3(model, frame):
 
     for output in layerOutputs:
         for detection in output:
-            score= detection[5:]
-            class_id= np.argmax(score)
-            confidence= score[class_id]
+            score= detection[5:] 
+            class_id= np.argmax(score) # 0
+            confidence= score[class_id] 
 
             if confidence>0.7:
                 center_x = int(detection[0] * width)

@@ -50,6 +50,7 @@ import random
 import numpy as np
 import matplotlib.cm as cm
 import torch
+import ipdb
 # from IPython import embed
 
 from models.matching import Matching
@@ -119,7 +120,7 @@ class SuperMatching():
         self.sinkhorn_iterations = 20 # Number of Sinkhorn iterations performed by SuperGlue
         self.match_threshold = 0.5
         self.force_cpu = force_cpu
-
+        # ipdbset_trace()
         # self.max_length = -1    # Maximum number of pairs to evaluate
         # self.max_keypoints = 1024 # Maximum number of keypoints detected by Superpoint (-1=keeps all keypoints)
         # self.keypoint_threshold = 0.005
@@ -136,7 +137,7 @@ class SuperMatching():
             self.weights = weights
         if weights_path is not None: 
             self.weights_path = weights_path
-
+        # ipdb.set_trace()
         self.config = {
             'superpoint': {
             'nms_radius': self.nms_radius,
@@ -153,15 +154,15 @@ class SuperMatching():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         # self.device = 'cpu'
 
-        self.matching = Matching(self.config).eval().to(self.device)
+        self.matching = Matching(self.config).eval().to(self.device) # matching.py
 
-
+# done
     def detectAndMatch(self, img1, img2,img3,img4):
         # Convert the image pair.
-        inp1 = frame2tensor(img1, self.device)
+        inp1 = frame2tensor(img1, self.device) # torch and normalised 
         inp2 = frame2tensor(img2, self.device)
         
-        if img2 is not None:
+        if img2 is not None: # isn't this always true ??
             inp3 = frame2tensor(img3, self.device)
             inp4 = frame2tensor(img4, self.device)
             pred = self.matching({'image0': inp1, 'image1': inp2},{'image0': inp3, 'image1': inp4})
@@ -169,11 +170,22 @@ class SuperMatching():
         else:
             pred = self.matching({'image0': inp1, 'image1': inp2})            
 
+        # ipdb.set_trace()  
         # Perform the matching.
+        # pred 
+        # dict_keys(['keypoints0', 'scores0', 'descriptors0', 'keypoints1', 'scores1', 'descriptors1', 'matches0', 'matches1', 
+        #           'matching_scores0', 'matching_scores1', 'log_scores_pred'])
         
         pred = {k: v[0].cpu().numpy() for k, v in pred.items()}
+        # same keys as above
+        # keypoints0 - 821,2 shape - has x and y coords of keypoints in img0
+        # scores0 - 821 values for each kp
+        # descriptors0 - 256, 821 - descirptor is 256 in size and 821 keypoints detected
+        
         kpts0, kpts1 = pred['keypoints0'], pred['keypoints1']
         matches, conf = pred['matches0'], pred['matching_scores0']
+        # matches - 821 (-1 means didnt find ?)
+        # conf - 821 values - 0 to 1
         
         # Write the matches to disk.
         out_matches = {'keypoints0': kpts0, 'keypoints1': kpts1,
@@ -183,7 +195,7 @@ class SuperMatching():
         
         # Keep the matching keypoints.
         valid = matches > -1
-        mkpts0 = kpts0[valid]
+        mkpts0 = kpts0[valid] # only 343 left
         mkpts1 = kpts1[matches[valid]]
         mconf = conf[valid]    
         

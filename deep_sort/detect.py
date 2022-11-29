@@ -2,8 +2,6 @@ import argparse
 import time
 from pathlib import Path
 
-#Comments
-
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
