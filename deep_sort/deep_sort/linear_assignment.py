@@ -3,14 +3,13 @@ from __future__ import absolute_import
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from . import kalman_filter
+import ipdb
 
 
 INFTY_COST = 1e+5
 
 
-def min_cost_matching(
-        distance_metric, max_distance, tracks, detections, track_indices=None,
-        detection_indices=None):
+def min_cost_matching(distance_metric, max_distance, tracks, detections, track_indices=None,detection_indices=None):
     """Solve linear assignment problem.
 
     Parameters
@@ -23,7 +22,8 @@ def min_cost_matching(
         the j-th detection in the given detection_indices.
     max_distance : float
         Gating threshold. Associations with cost larger than this value are
-        disregarded.
+        disregarded. 
+        0.7
     tracks : List[track.Track]
         A list of predicted tracks at the current time step.
     detections : List[detection.Detection]
@@ -52,9 +52,9 @@ def min_cost_matching(
     if len(detection_indices) == 0 or len(track_indices) == 0:
         return [], track_indices, detection_indices  # Nothing to match.
 
-    cost_matrix = distance_metric(
-        tracks, detections, track_indices, detection_indices)
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5
+    # ipdb.set_trace()
+    cost_matrix = distance_metric(tracks, detections, track_indices, detection_indices) # calls gated_metric - tracks x detctions
+    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5 # max distance is 0.4
     indices = linear_sum_assignment(cost_matrix) #Link the detection to tracker
     indices = np.asarray(indices) #Makes a 2D array with row at indices at row 0 and column indices at row 1
     indices = np.transpose(indices) #Convert it in the form of (row,column)
@@ -76,8 +76,7 @@ def min_cost_matching(
     return matches, unmatched_tracks, unmatched_detections
 
 
-def matching_cascade(
-        distance_metric, max_distance, cascade_depth, tracks, detections,
+def matching_cascade(distance_metric, max_distance, cascade_depth, tracks, detections,
         track_indices=None, detection_indices=None):
     """Run matching cascade.
 
@@ -92,6 +91,9 @@ def matching_cascade(
     max_distance : float
         Gating threshold. Associations with cost larger than this value are
         disregarded.
+
+        max_cosine_distance of 0.4 kept.
+
     cascade_depth: int
         The cascade depth, should be se to the maximum track age.
     tracks : List[track.Track]
@@ -123,8 +125,8 @@ def matching_cascade(
 
     unmatched_detections = detection_indices
     matches = []
-    # import ipdb;ipdb.set_trace()
-    for level in range(cascade_depth):
+    # ipdb.set_trace()
+    for level in range(cascade_depth): #casade_depth - max_age "of" tracks
         if len(unmatched_detections) == 0:  # No detections left
             break
 
@@ -181,6 +183,7 @@ def gate_cost_matrix(
         Returns the modified cost matrix.
 
     """
+    ipdb.set_trace()
     gating_dim = 2 if only_position else 4
     gating_threshold = kalman_filter.chi2inv95[gating_dim]
     measurements = np.asarray(

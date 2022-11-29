@@ -4,3 +4,15 @@ Misc_superglue
 results
 environment.yml
 data
+Tests
+yolov7x.pt
+validate.py
+__pycache__
+backup_V3
+yolo_weights
+*.jpg
+*.avi
+*.png
+*.csv
+/home/swathi/CMU/vlr/vlr-project/saharsh/rishab/VLR-Project/Superglue/superpoint_v1.pth
+test_video

@@ -1,12 +1,18 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
 import scipy.linalg
+import ipdb
 
 
 """
 Table for the 0.95 quantile of the chi-square distribution with N degrees of
 freedom (contains values for N=1, ..., 9). Taken from MATLAB/Octave's chi2inv
 function and used as Mahalanobis gating threshold.
+
+P(X<=x) is 0.95 - fo diff DoF the vals are below 
+For help, refer - https://online.stat.psu.edu/stat414/book/export/html/762
+
+imp - used as Mahalanobis gating threshold # Reference - https://en.wikipedia.org/wiki/Mahalanobis_distance
 """
 chi2inv95 = {
     1: 3.8415,
@@ -36,19 +42,22 @@ class KalmanFilter(object):
     observation model).
 
     """
-
+#done
     def __init__(self):
         ndim, dt = 4, 1.
 
         # Create Kalman filter model matrices.
-        self._motion_mat = np.eye(2 * ndim, 2 * ndim)
+        # import ipdb
+        # ipdb.set_trace()
+        self._motion_mat = np.eye(2 * ndim, 2 * ndim) #I-8
         for i in range(ndim):
-            self._motion_mat[i, ndim + i] = dt
-        self._update_mat = np.eye(ndim, 2 * ndim)
+            self._motion_mat[i, ndim + i] = dt # top right box of 4x4 is also I-4 now
+        self._update_mat = np.eye(ndim, 2 * ndim) # 4,8 where I4 followed by 0
 
         # Motion and observation uncertainty are chosen relative to the current
         # state estimate. These weights control the amount of uncertainty in
         # the model. This is a bit hacky.
+        # following values set by us
         self._std_weight_position = 1. / 20
         self._std_weight_velocity = 1. / 160
 
@@ -69,10 +78,12 @@ class KalmanFilter(object):
             to 0 mean.
 
         """
-        mean_pos = measurement
+        
+        # ipdb.set_trace()
+        mean_pos = measurement # takes one boundiing box at a time 
         mean_vel = np.zeros_like(mean_pos)
-        mean = np.r_[mean_pos, mean_vel]
-        mean[4]=-33
+        mean = np.r_[mean_pos, mean_vel] # concats to form - [       1762,       718.5,      1.1688,          77,           0,           0,           0,           0]
+        mean[4]=-33 # why this minus 33 ??? Ask Rishabh
 
         std = [
             2 * self._std_weight_position * measurement[3],
@@ -83,6 +94,9 @@ class KalmanFilter(object):
             10 * self._std_weight_velocity * measurement[3],
             1e-5,
             10 * self._std_weight_velocity * measurement[3]]
+        #std = [7.7, 7.7, 0.01, 7.7, 4.8125, 4.8125, 1e-05, 4.8125]
+
+        
         # std = [
         #     self._std_weight_position * measurement[3],
         #     self._std_weight_position * measurement[3],
@@ -114,6 +128,7 @@ class KalmanFilter(object):
             state. Unobserved velocities are initialized to 0 mean.
 
         """
+        # ipdb.set_trace()
         std_pos = [
             self._std_weight_position * mean[3],
             self._std_weight_position * mean[3],

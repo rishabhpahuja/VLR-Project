@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import imutils
 import pandas as pd
 import seaborn as sns
+import ipdb
 
 # from IPython import embed
 
@@ -42,12 +43,13 @@ def transf_pntcld(M_est, pt_cld):
 
     return pt_cld_transf
 
-
+# done
 def setup_sg_class(superglue_weights_path):
-    sg_matching = SuperMatching()
+    # ipdb.set_trace()
+    sg_matching = SuperMatching() # super_matching.py
     sg_matching.weights = 'custom'
     sg_matching.weights_path = superglue_weights_path
-    sg_matching.set_weights()
+    sg_matching.set_weights() # super_matching.py
     
     return sg_matching
 
@@ -80,20 +82,23 @@ def SuperGlueDetection_deep_sort(mg1, img2, rect1, rect2):
     
     
     for i in range(len(rect1)):
-        for j in range(len(rect2))
+        for j in range(len(rect2)):
             mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,rect2.loc[i]),crop_image(img1_gray,rect1.loc[j]))
-                    
-
+        
 def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
-    
-    img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-    img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+    # ipdb.set_trace()
+    img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY) # (1536, 2048)
+    img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY) # (1536, 2048)
 
     if rect1 is not None:
-        image_mask1=np.zeros(img1_gray.shape,np.uint8)
-        for i in range(len(rect1)):
-            image_mask1[rect1.at[i,1]:rect1.at[i,3],rect1.at[i,0]:rect1.at[i,2]]=255
+        image_mask1=np.zeros(img1_gray.shape,np.uint8) # (1536, 2048)
+        for i in range(len(rect1)): # along rows of the csv - can we make them ascending ??
+            image_mask1[rect1.at[i,1]:rect1.at[i,3],rect1.at[i,0]:rect1.at[i,2]]=255 # makes all 
         img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1)
+        # below code saves the detctions and makes everything black outside it.
+        # cv2.imwrite("mask.jpg",image_mask1)
+        # cv2.imwrite("graymask.jpg",img1_gray_masked)
+    # ipdb.set_trace()
 
     if rect2 is not None:
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
@@ -101,17 +106,20 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
             image_mask2[rect2.at[i,1]:rect2.at[i,3],rect2.at[i,0]:rect2.at[i,2]]=255
         img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1)
 
-    if rect1 is not None:
+    if rect1 is not None: # if we have detctions in image 1
         mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
     
     else:
-        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray,img2_gray)
+        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray,img2_gray) # only those that match are returned
     
     #! Show matched keypoints
     for x,y in kp1.astype(np.int64):
         cv2.circle(img1, (x,y), 2, (255,0,0), -1)
         cv2.circle(img2, (x,y), 2, (0,0,255), -1)
-    # for x,y in kp2.astype(np.int64): import ipdb; ipdb.set_trace()
+    cv2.imwrite("kp.png", img1)
+    ipdb.set_trace()
+    # for x,y in kp2.astype(np.int64): 
+    # import ipdb; ipdb.set_trace()
 
     # import ipdb; ipdb.set_trace()
     
@@ -133,6 +141,8 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
             colours[j]=((rect1.loc[i,0],rect1.loc[i,1],rect1.loc[i,2],rect1.loc[i,3]),list(colour[j]))
         # import ipdb; ipdb.set_trace()
         sg_matching.plot_matches(img1, img2, kp1, kp2, matches1, matches2,rect1, colours,mconf)
+
+    ipdb.set_trace()
     
     return kp1, kp2, matches1, matches2
 
@@ -286,15 +296,16 @@ def adjust_contrast(img):
 def test_two(args):
     # from IPython import embed; embed()
     # Load images
-    ref_path = args.reference_path
-    align_path = args.align_path
+    # ipdb.set_trace()
+    ref_path = args.reference_path ### refernce image - jpeg
+    align_path = args.align_path ### aligning image 
 
-    ref = cv2.imread(ref_path, 1) 
+    ref = cv2.imread(ref_path, 1)  # shape - (1536, 2048, 3)
     # ref=adjust_contrast(ref) 
     align = cv2.imread(align_path, 1)
     # align=adjust_contrast(align)
-    rect1=pd.read_csv('./data/L0084.csv', header=None)
-    rect2=pd.read_csv('./data/L0085.csv', header=None)
+    rect1=pd.read_csv('./data/L0085.csv', header=None) # no. of detections = 36 ... bbox - 4 - (no. of detction boxes, bbox)
+    rect2=pd.read_csv('./data/L0086.csv', header=None)
 
     sg_matching = setup_sg_class(args.superglue_weights_path)
     ref_keypoints, align_keypoints, matches1, matches2  = SuperGlueDetection(ref, align, sg_matching,rect1,rect2,debug=True)
@@ -314,13 +325,12 @@ if __name__ == "__main__":
     # for i in angle:
     #     img1=cv2.imread("2.png")
     #     img2=imutils.rotate_bound(img1,i)
-        
 
     parser.add_argument('-ref', '--reference_path',
-                        type=str, default='./data/L0084.jpeg',
+                        type=str, default='./data/L0085.jpeg',
                         help='Reference Image')
     parser.add_argument('-align', '--align_path',
-                        type=str, default='./data/L0085.jpeg',
+                        type=str, default='./data/L0086.jpeg',
                         help='Image to align')
     # parser.add_argument('--superglue', choices={'indoor', 'outdoor', 'custom'}, 
     #                     default='custom',
