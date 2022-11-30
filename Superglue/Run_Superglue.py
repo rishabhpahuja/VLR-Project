@@ -68,8 +68,8 @@ def find_conf_values(rect,matches,conf_score,pos,conf):
         conf_score[pos]=round(conf_score[pos]/k,3)
     return conf_score
 
-def crop_image(img,(tl,bl)):
-    
+def crop_image(img,box):
+    tl,bl=box
     cropped_image=img[tl[1]-5:bl[3]+5,tl[0]-5:bl[2]+5]
 
     return cropped_image
