@@ -1,6 +1,16 @@
 # VLR-Project
 This repository is used for the project "SuperDeepSort" for Visual Learning and Recognition (CMU-16824) (Class Link: https://visual-learning.cs.cmu.edu/hw1.html)
 
+In this project we are trying to incroporate superglue in deep sort for re-association of objects. We are trying different methods of incorporating superglue algorithm in the baseline. We tried the following things:
+
+1. Replace cosine distance metric to find cost matrix by superglue algorithm
+2. Replace IOU metric to find cost matrix by superglue algorithm 
+3. Add superglue and cosine matrix by assigning weights and then send the unmatched boxes to IOU.
+
+These cases can further be tried by two cases:
+1. We apply superglue between the two frames by cropping the images along the bounding boxes.
+2. We apply superglue between the two frames such that keypoints are found along the cropped images and keypoint matching is applied on the whole frame. 
+
 ## Superglue ##
 This folder consists of the script to use superglue algorithm. To run this script use the following command:
 
