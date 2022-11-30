@@ -134,6 +134,9 @@ class Tracker:
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
                 detections, iou_track_candidates, unmatched_detections)
         # checks for 1 after the other
+        if True:
+            matches_c,unmatched_tracks_c,unmatched_detections=\
+                
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
