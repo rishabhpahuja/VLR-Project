@@ -54,7 +54,7 @@ class Matching(torch.nn.Module):
         self.superpoint = SuperPoint(config.get('superpoint', {}))
         self.superglue = SuperGlue(config.get('superglue', {}))
 
-    def forward(self, data1,data2=None):
+    def forward(self, data1,data2=None,reference=True):
         """ Run SuperPoint (optionally) and SuperGlue
         SuperPoint is skipped if ['keypoints0', 'keypoints1'] exist in input
         Args:
@@ -76,7 +76,7 @@ class Matching(torch.nn.Module):
         # data1 includes only fruits and data2 includes only images
         # data2 is used in data and data 1 in keypoints so that keypoints are found only inside the boxes while in data data 2 is used so that full images can
         # be used to draw the matches
-        if data2 is not None:
+        if data2 is not None and reference is True:
             data = {**data2, **pred}
         
         else:

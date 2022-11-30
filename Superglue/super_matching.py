@@ -157,15 +157,15 @@ class SuperMatching():
         self.matching = Matching(self.config).eval().to(self.device) # matching.py
 
 # done
-    def detectAndMatch(self, img1, img2,img3,img4):
+    def detectAndMatch(self, img1, img2,img3=None,img4=None,reference=True):
         # Convert the image pair.
         inp1 = frame2tensor(img1, self.device) # torch and normalised 
         inp2 = frame2tensor(img2, self.device)
         
-        if img2 is not None: # isn't this always true ??
+        if img3 is not None: 
             inp3 = frame2tensor(img3, self.device)
             inp4 = frame2tensor(img4, self.device)
-            pred = self.matching({'image0': inp1, 'image1': inp2},{'image0': inp3, 'image1': inp4})
+            pred = self.matching({'image0': inp1, 'image1': inp2},{'image0': inp3, 'image1': inp4},reference)
         
         else:
             pred = self.matching({'image0': inp1, 'image1': inp2})            
@@ -188,8 +188,8 @@ class SuperMatching():
         # conf - 821 values - 0 to 1
         
         # Write the matches to disk.
-        out_matches = {'keypoints0': kpts0, 'keypoints1': kpts1,
-                       'matches': matches, 'match_confidence': conf}
+        #out_matches = {'keypoints0': kpts0, 'keypoints1': kpts1,
+                    #    'matches': matches, 'match_confidence': conf}
         
         # np.savez(str(matches_path), **out_matches)
         

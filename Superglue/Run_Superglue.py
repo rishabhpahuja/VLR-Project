@@ -8,6 +8,7 @@ import imutils
 import pandas as pd
 import seaborn as sns
 import ipdb
+from .deep_sort import linear_assignment
 
 # from IPython import embed
 
@@ -74,11 +75,9 @@ def crop_image(img,box):
 
     return cropped_image
 
-def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching):
+def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching,reference):
 
     mconf_row=np.zeros((1,len(candidates)))
-    img1_gray=cv2.cvtColor(frame_t,cv2.COLOR_BGR2GRAY)
-    img2_gray=cv2.cvtColor(frame_t_1,cv2.COLOR_BGR2GRAY)
 
     bbox_tl, bbox_br = bbox[:2], bbox[:2] + bbox[2:]
     candidates_tl = candidates[:, :2]
@@ -86,13 +85,14 @@ def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching):
     
     for i in range(len(candidates)):
             # xmin=
-            mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,(candidates_tl[i],candidates_br[i])),crop_image(img1_gray,(bbox_tl[i],bbox_br[i])))
+            # mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,(candidates_tl[i],candidates_br[i])),crop_image(img1_gray,(bbox_tl[i],bbox_br[i])))
+            mconf, _, _, _, _ = SuperGlueDetection(frame_t,frame_t_1,sg_matching,(bbox_tl,bbox_br),(candidates_tl[i],candidates_br[i]),reference=reference)
             mconf_row[i]=mconf.cpu().numpy().mean()
     
     return mconf_row
 
 def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
-             detection_indices=None, superglue_weights_path=None):
+             detection_indices=None, superglue_weights_path=None,reference=True):
     
     if superglue_weights_path is None:
         raise("SuperGlue Weights Path not given")
@@ -112,32 +112,32 @@ def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
 
         bbox = tracks[track_idx].to_tlwh()
         candidates = np.asarray([detections[i].tlwh for i in detection_indices])
-        cost_matrix[row, :] = 1. - Sg_conf(bbox, candidates, frame_t,frame_t_1,sg_matching)
+        cost_matrix[row, :] = 1. - Sg_conf(bbox, candidates, frame_t,frame_t_1,sg_matching,reference=reference)
     return cost_matrix
 
-def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False):
+def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=False,reference=True):
     # ipdb.set_trace()
     img1_gray=cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY) # (1536, 2048)
     img2_gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY) # (1536, 2048)
 
+    bbox_tl,bbox_br=rect1
+    candidate_tl,candidate_br=rect2
+
+    #If bounding boxes are passed, a mask is made such that only the fruits are visible to use superglue
     if rect1 is not None:
         image_mask1=np.zeros(img1_gray.shape,np.uint8) # (1536, 2048)
-        for i in range(len(rect1)): # along rows of the csv - can we make them ascending ??
-            image_mask1[rect1.at[i,1]:rect1.at[i,3],rect1.at[i,0]:rect1.at[i,2]]=255 # makes all 
-        img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1)
-        # below code saves the detctions and makes everything black outside it.
-        # cv2.imwrite("mask.jpg",image_mask1)
-        # cv2.imwrite("graymask.jpg",img1_gray_masked)
-    # ipdb.set_trace()
+        for i in range(): 
+            image_mask1[bbox_tl[1]:bbox_br[3],bbox_tl[0]:bbox_br[2]]=255
+        img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1) #This mask is for frame_t
 
-    if rect2 is not None:
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         for i in range(len(rect2)):
             image_mask2[rect2.at[i,1]:rect2.at[i,3],rect2.at[i,0]:rect2.at[i,2]]=255
-        img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1)
+        img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1) #This mask is for frame_t_1
 
-    if rect1 is not None: # if we have detctions in image 1
-        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray)
+    # This condi
+    if rect1 is not None: 
+        mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray_masked, img2_gray_masked,img1_gray,img2_gray,reference)
     
     else:
         mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray,img2_gray) # only those that match are returned
@@ -146,8 +146,8 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
     for x,y in kp1.astype(np.int64):
         cv2.circle(img1, (x,y), 2, (255,0,0), -1)
         cv2.circle(img2, (x,y), 2, (0,0,255), -1)
-    cv2.imwrite("kp.png", img1)
-    ipdb.set_trace()
+    # cv2.imwrite("kp.png", img1)
+    # ipdb.set_trace()
     # for x,y in kp2.astype(np.int64): 
     # import ipdb; ipdb.set_trace()
 
@@ -172,9 +172,9 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
         # import ipdb; ipdb.set_trace()
         sg_matching.plot_matches(img1, img2, kp1, kp2, matches1, matches2,rect1, colours,mconf)
 
-    ipdb.set_trace()
+    # ipdb.set_trace()
     
-    return kp1, kp2, matches1, matches2
+    return mconf,kp1, kp2, matches1, matches2
 
 
 """

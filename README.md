@@ -11,6 +11,9 @@ These cases can further be tried by two cases:
 1. We apply superglue between the two frames by cropping the images along the bounding boxes.
 2. We apply superglue between the two frames such that keypoints are found along the cropped images and keypoint matching is applied on the whole frame. 
 
+Note:
+The scripts right now is written such that the keypoints are found within the fruit region and matched using the entire image. To change this to case where only bounding box area is passed to superglue, call Superglue_cost function by passing reference=False. 
+
 ## Superglue ##
 This folder consists of the script to use superglue algorithm. To run this script use the following command:
 
