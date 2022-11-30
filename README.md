@@ -16,8 +16,6 @@ This repository is used for the project "SuperDeepSort" for Visual Learning and 
 - Passing frames to use any part of **A**
 - Decide whether to use gated_metric for superglue. It hasn't been added yet.
 
-**TODO:** Figure out the method to pass frames when using superglue. The frames will have to be passed in line 141 when calling function linear_assignment.min_cost_matching and from there it will be passed to superglue.
-
 **B.** These cases can further be tried by two cases:
 1. We apply superglue between the two frames by cropping the images along the bounding boxes.
 2. We apply superglue between the two frames such that keypoints are found along the cropped images and keypoint matching is applied on the whole frame. 
