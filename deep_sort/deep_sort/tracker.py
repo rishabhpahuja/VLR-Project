@@ -43,7 +43,7 @@ class Tracker:
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
         self.n_init = n_init
-
+        self.max_sg_distance=max_sg_distance
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
         self._next_id = 1
@@ -119,10 +119,21 @@ class Tracker:
         unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
         # Associate confirmed tracks using appearance features.
-        matches_a, unmatched_tracks_a, unmatched_detections = \
-            linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
-                self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-
+        if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
+            matches_a, unmatched_tracks_a, unmatched_detections = \
+                linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
+                    self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
+        
+        else:#Cascading matchign will be done using superglue
+            matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade(\
+                sg.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
+                detections, confirmed_tracks)
+        
+        if False: #If true superglue and cosine will be used both for cascade matching
+            matches_a, unmatched_tracks_a, unmatched_detections = \
+                linear_assignment.matching_cascade_using_two_metrics(gated_metric,sg.Superglue_cost,self.metric.matching_threshold, \
+                self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
+        
         # Associate remaining tracks together with unconfirmed tracks using IOU.
         iou_track_candidates = unconfirmed_tracks + [
             k for k in unmatched_tracks_a if
@@ -131,14 +142,14 @@ class Tracker:
             k for k in unmatched_tracks_a if
             self.tracks[k].time_since_update != 1]
         
-        if False:
+        if False: #if True, iou matching will be done usign superglue
             matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching(\
                 sg.Superglue_cost, self.max_sg_distance, self.tracks,
                 detections, iou_track_candidates, unmatched_detections)
             
             matches=matches_a+matches_c
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c))
-        else:
+        else: #IOU mtric will be used for IOU matching
             matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
                 detections, iou_track_candidates, unmatched_detections)

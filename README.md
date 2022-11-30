@@ -8,8 +8,15 @@ This repository is used for the project "SuperDeepSort" for Visual Learning and 
 3. Add superglue and cosine matrix by assigning weights and then send the unmatched boxes to IOU.
 
 ### Note:
-The script has been written to implement **A.2**. To activate this, change False->True in line 134 of ./deep_sort/deep_sort/tracker.py
-**TODO:** Figure out the method to pass frames when using superglue. The frames will have to be passed in line 135 when calling function linear_assignment.min_cost_matching and from there it will be passed to superglue.
+-The script for **A.1** has been added. TO activate it, change True->False in line 122 of ./deep_sort/deep_sort/tracker.py
+-The script has been written to implement **A.2**. To activate this, change False->True in line 145 of ./deep_sort/deep_sort/tracker.py
+-The script has been written to implement **A.3**. To activate this, change False->True in line 132 of ./deep_sort/deep_sort/tracker.py
+
+#### Pendign tasks:
+- Passing frames to use any part of **A**
+- Decide whether to use gated_metric for superglue. It hasn't been added yet.
+
+**TODO:** Figure out the method to pass frames when using superglue. The frames will have to be passed in line 141 when calling function linear_assignment.min_cost_matching and from there it will be passed to superglue.
 
 **B.** These cases can further be tried by two cases:
 1. We apply superglue between the two frames by cropping the images along the bounding boxes.
