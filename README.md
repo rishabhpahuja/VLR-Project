@@ -8,9 +8,9 @@ This repository is used for the project "SuperDeepSort" for Visual Learning and 
 3. Add superglue and cosine matrix by assigning weights and then send the unmatched boxes to IOU.
 
 ### Note:
--The script for **A.1** has been added. TO activate it, change True->False in line 122 of ./deep_sort/deep_sort/tracker.py
--The script has been written to implement **A.2**. To activate this, change False->True in line 145 of ./deep_sort/deep_sort/tracker.py
--The script has been written to implement **A.3**. To activate this, change False->True in line 132 of ./deep_sort/deep_sort/tracker.py
+- The script for **A.1** has been added. TO activate it, change True->False in line 122 of ./deep_sort/deep_sort/tracker.py
+- The script has been written to implement **A.2**. To activate this, change False->True in line 145 of ./deep_sort/deep_sort/tracker.py
+- The script has been written to implement **A.3**. To activate this, change False->True in line 132 of ./deep_sort/deep_sort/tracker.py
 
 #### Pendign tasks:
 - Passing frames to use any part of **A**
