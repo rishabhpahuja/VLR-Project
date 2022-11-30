@@ -4,6 +4,7 @@ from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
 from .track import Track
+from ../SuperGlue import Run_Superglue as sg
 import ipdb
 
 
@@ -37,7 +38,7 @@ class Tracker:
 
     """
 # done
-    def __init__(self, metric, max_iou_distance=0.7, max_age=75, n_init=1):
+    def __init__(self, metric, max_iou_distance=0.7, max_age=75, n_init=1,max_sg_distance=0.4):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
@@ -129,16 +130,21 @@ class Tracker:
         unmatched_tracks_a = [
             k for k in unmatched_tracks_a if
             self.tracks[k].time_since_update != 1]
-        matches_b, unmatched_tracks_b, unmatched_detections = \
-            linear_assignment.min_cost_matching(
+        
+        if False:
+            matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching(\
+                sg.Superglue_cost, self.max_sg_distance, self.tracks,
+                detections, iou_track_candidates, unmatched_detections)
+            
+            matches=matches_a+matches_c
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c))
+        else:
+            matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
                 detections, iou_track_candidates, unmatched_detections)
         # checks for 1 after the other
-        if True:
-            matches_c,unmatched_tracks_c,unmatched_detections=\
-                
-        matches = matches_a + matches_b
-        unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
+            matches = matches_a + matches_b
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
 #done
     def _initiate_track(self, detection):

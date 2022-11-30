@@ -132,7 +132,7 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
 
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         for i in range(len(rect2)):
-            image_mask2[rect2.at[i,1]:rect2.at[i,3],rect2.at[i,0]:rect2.at[i,2]]=255
+            image_mask2[candidate_tl[1]:candidate_br[3],candidate_tl[0]:candidate_br[2]]=255
         img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1) #This mask is for frame_t_1
 
     # This condi
