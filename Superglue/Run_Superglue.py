@@ -8,7 +8,8 @@ import imutils
 import pandas as pd
 import seaborn as sns
 import ipdb
-from .deep_sort import linear_assignment
+import sys
+from deep_sort import linear_assignment
 
 # from IPython import embed
 
@@ -93,9 +94,10 @@ def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching,reference):
 
 def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
              detection_indices=None, superglue_weights_path=None,reference=True):
-    
+    ipdb.set_trace()
     if superglue_weights_path is None:
-        raise("SuperGlue Weights Path not given")
+        # raise("SuperGlue Weights Path not given")
+        superglue_weights_path = "./global_registration_sg.pth" # path not taken for args when integrating
     
     sg_matching=setup_sg_class(superglue_weights_path)
 

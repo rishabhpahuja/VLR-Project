@@ -51,10 +51,12 @@ import numpy as np
 import matplotlib.cm as cm
 import torch
 import ipdb
+import sys
+sys.path.insert(2,"/home/saharsh2/VLR-Project/Superglue/models")
 # from IPython import embed
 
-from models.matching import Matching
-from models.utils import (frame2tensor, compute_epipolar_error,
+from matching import Matching
+from utils_sg import (frame2tensor, compute_epipolar_error,
                           estimate_pose, make_matching_plot_fast,
                           error_colormap, AverageTimer, pose_auc, read_image,
                           rotate_intrinsics, rotate_pose_inplane,

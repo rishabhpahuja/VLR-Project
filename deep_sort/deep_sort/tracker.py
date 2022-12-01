@@ -4,7 +4,10 @@ from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
 from .track import Track
-from ../SuperGlue import Run_Superglue as sg
+import sys
+sys.path.insert(1,"/home/saharsh2/VLR-Project/Superglue")
+sys.path.insert(2,"/home/saharsh2/VLR-Project/Superglue/models")
+import Run_Superglue as sg
 import ipdb
 
 
@@ -47,13 +50,18 @@ class Tracker:
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
         self._next_id = 1
+        self.frame_t = None
+        self.frame_t_1 = None
 
-    def predict(self):
+    def predict(self, prev_frame, frame):
         """Propagate track state distributions one time step forward.
 
         This function should be called once every time step, before `update`.
         """
         # import ipdb;ipdb.set_trace()
+        self.frame_t = prev_frame
+        self.frame_t_1 = frame
+
         for track in self.tracks:
             track.predict(self.kf)
 
@@ -119,15 +127,16 @@ class Tracker:
         unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
         # Associate confirmed tracks using appearance features.
-        if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
+        if False: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
             matches_a, unmatched_tracks_a, unmatched_detections = \
                 linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
                     self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
         else:#Cascading matchign will be done using superglue
+            # ipdb.set_trace()
             matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade(\
                 sg.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
-                detections, confirmed_tracks)
+                detections, self.frame_t, self.frame_t_1, confirmed_tracks)
         
         if False: #If true superglue and cosine will be used both for cascade matching
             matches_a, unmatched_tracks_a, unmatched_detections = \
@@ -142,6 +151,7 @@ class Tracker:
             k for k in unmatched_tracks_a if
             self.tracks[k].time_since_update != 1]
         
+        # ipdb.set_trace()
         if False: #if True, iou matching will be done usign superglue
             matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching(\
                 sg.Superglue_cost, self.max_sg_distance, self.tracks,
@@ -150,6 +160,7 @@ class Tracker:
             matches=matches_a+matches_c
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c))
         else: #IOU mtric will be used for IOU matching
+            # ipdb.set_trace()
             matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
                 detections, iou_track_candidates, unmatched_detections)

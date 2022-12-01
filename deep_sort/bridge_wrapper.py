@@ -1,7 +1,7 @@
 '''
 A Moduele which binds Yolov7 repo with Deepsort with modifications
 '''
-
+import copy
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # comment out below line to enable tensorflow logging outputs
 import time
@@ -87,9 +87,11 @@ class YOLOv7_DeepSORT:
             # print(width, height, fps, codec, out)
 
         frame_num = 0
+        prev_frame = None
         while True: # while video is running
             return_value, frame = vid.read()
-            frame_copy = frame.copy()
+            # ipdb.set_trace()
+            frame_copy = copy.deepcopy(frame)
             if not return_value:
                 print('Video has ended or failed!')
                 break
@@ -144,10 +146,10 @@ class YOLOv7_DeepSORT:
             colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]   # can't detect more than 20 at once ??
             # each has 3 values
             # ipdb.set_trace()
-            self.tracker.predict()  # Call the tracker
+            self.tracker.predict(prev_frame, frame)  # Call the tracker - nothing with the cost yet
             # ipdb.set_trace()
             unmatched_tracks,unmatched_detections=self.tracker.update(detections) #  update using Kalman Gain
-
+            # update - step 12 in my notebook
             # import ipdb; ipdb.set_trace()
 
             for track in self.tracker.tracks:  # update new findings AKA tracks  
@@ -172,7 +174,7 @@ class YOLOv7_DeepSORT:
                     
             # -------------------------------- Tracker work ENDS here -----------------------------------------------------------------------
             # for track in unmatched_tracks:
-            ipdb.set_trace()
+            # ipdb.set_trace()
             if verbose >= 1:
                 fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
                 if not count_objects: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)}")

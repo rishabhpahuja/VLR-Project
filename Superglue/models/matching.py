@@ -42,9 +42,9 @@
 
 import torch
 
-from .superpoint import SuperPoint
+from superpoint import SuperPoint
 # from .superglue import SuperGlue
-from .superglue_official import SuperGlue
+from superglue_official import SuperGlue
 
 
 class Matching(torch.nn.Module):
