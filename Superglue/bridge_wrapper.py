@@ -196,7 +196,7 @@ class YOLOv7_DeepSORT:
             elif frame_num<10:
                 name=dir_path+'00'+str(frame_num)+'.png'
             cv2.imwrite(name,frame)
-            # ipdb.set_trace()
+            ipdb.set_trace()
             prev_frame = frame_copy
         cv2.destroyAllWindows()
 
