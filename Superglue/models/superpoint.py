@@ -43,6 +43,7 @@
 from pathlib import Path
 import torch
 from torch import nn
+import ipdb
 
 def simple_nms(scores, nms_radius: int):
     """ Fast Non-maximum suppression to remove nearby points """
@@ -144,7 +145,7 @@ class SuperPoint(nn.Module):
         mk = self.config['max_keypoints']
         if mk == 0 or mk < -1:
             raise ValueError('\"max_keypoints\" must be positive or \"-1\"')
-
+        # ipdb.set_trace() # being called every frame
         print('Loaded SuperPoint model')
 
     def encode(self, data):

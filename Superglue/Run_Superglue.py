@@ -11,6 +11,12 @@ import ipdb
 import sys
 from deep_sort import linear_assignment
 
+
+from detection_helpers import *
+from tracking_helpers import *
+from  bridge_wrapper import *
+import cv2
+
 # from IPython import embed
 
 def transf_matrix(theta=0, translation=[0,0]):
@@ -47,7 +53,7 @@ def transf_pntcld(M_est, pt_cld):
 
 # done
 def setup_sg_class(superglue_weights_path):
-    # ipdb.set_trace()
+    # ipdb.set_trace() # being called evry frame
     sg_matching = SuperMatching() # super_matching.py
     sg_matching.weights = 'custom'
     sg_matching.weights_path = superglue_weights_path
@@ -88,18 +94,32 @@ def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching,reference):
             # xmin=
             # mconf, _, _, _, _ = sg_matching.detectAndMatch(crop_image(img2_gray,(candidates_tl[i],candidates_br[i])),crop_image(img1_gray,(bbox_tl[i],bbox_br[i])))
             mconf, _, _, _, _ = SuperGlueDetection(frame_t,frame_t_1,sg_matching,(bbox_tl,bbox_br),(candidates_tl[i],candidates_br[i]),reference=reference)
-            mconf_row[i]=mconf.cpu().numpy().mean()
-    
+
+            # if no detection - mconf is empy- gives back empty and thus, nan is returned - check
+            # print(mconf)
+            # ipdb.set_trace()
+            if (len(mconf)==0):
+                 mconf_row[0][i]=0 # if no matches - confidence is zero ??
+            else:
+                # mconf_row[i]=mconf.cpu().numpy().mean() # changed rish
+                mconf_row[0][i]=mconf.mean()#.cpu().numpy().mean() 
+
+    # mconf_row - 
+    # array([[    0.61988,     0.57531,     0.55056,      0.5685,       0.571,     0.57331,     0.64581,     0.58366,     0.60006]])
+    # print(mconf_row) # nan somehow
+    # ipdb.set_trace()
     return mconf_row
 
 def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
              detection_indices=None, superglue_weights_path=None,reference=True):
-    ipdb.set_trace()
+    # ipdb.set_trace()
     if superglue_weights_path is None:
         # raise("SuperGlue Weights Path not given")
-        superglue_weights_path = "./global_registration_sg.pth" # path not taken for args when integrating
+        superglue_weights_path = "/home/saharsh2/VLR-Project/Superglue/global_registration_sg.pth" # path not taken for args when integrating
+    # ipdb.set_trace() # calling every frame
     
     sg_matching=setup_sg_class(superglue_weights_path)
+    # ipdb.set_trace()
 
     if track_indices is None:
         track_indices = np.arange(len(tracks))
@@ -124,17 +144,18 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
 
     bbox_tl,bbox_br=rect1
     candidate_tl,candidate_br=rect2
-
+    # ipdb.set_trace()
     #If bounding boxes are passed, a mask is made such that only the fruits are visible to use superglue
     if rect1 is not None:
         image_mask1=np.zeros(img1_gray.shape,np.uint8) # (1536, 2048)
-        for i in range(): 
-            image_mask1[bbox_tl[1]:bbox_br[3],bbox_tl[0]:bbox_br[2]]=255
+        for i in range(len(rect1)):  # range was blank in rishabh
+            image_mask1[int(bbox_tl[1]):int(bbox_br[1]),int(bbox_tl[0]):int(bbox_br[0])]=255
         img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1) #This mask is for frame_t
+        # ipdb.set_trace()
 
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         for i in range(len(rect2)):
-            image_mask2[candidate_tl[1]:candidate_br[3],candidate_tl[0]:candidate_br[2]]=255
+            image_mask2[int(candidate_tl[1]):int(candidate_br[1]),int(candidate_tl[0]):int(candidate_br[0])]=255
         img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1) #This mask is for frame_t_1
 
     # This condi
@@ -336,8 +357,8 @@ def test_two(args):
     # ref=adjust_contrast(ref) 
     align = cv2.imread(align_path, 1)
     # align=adjust_contrast(align)
-    rect1=pd.read_csv('./data/L0085.csv', header=None) # no. of detections = 36 ... bbox - 4 - (no. of detction boxes, bbox)
-    rect2=pd.read_csv('./data/L0086.csv', header=None)
+    rect1=pd.read_csv('/home/saharsh2/VLR-Project/Superglue/test_data/L0085.csv', header=None) # no. of detections = 36 ... bbox - 4 - (no. of detction boxes, bbox)
+    rect2=pd.read_csv('/home/saharsh2/VLR-Project/Superglue/test_data/L0085.csv', header=None)
 
     sg_matching = setup_sg_class(args.superglue_weights_path)
     ref_keypoints, align_keypoints, matches1, matches2  = SuperGlueDetection(ref, align, sg_matching,rect1,rect2,debug=True)
@@ -359,10 +380,10 @@ if __name__ == "__main__":
     #     img2=imutils.rotate_bound(img1,i)
 
     parser.add_argument('-ref', '--reference_path',
-                        type=str, default='./data/L0085.jpeg',
+                        type=str, default='/home/saharsh2/VLR-Project/Superglue/test_data/L0085.jpeg',
                         help='Reference Image')
     parser.add_argument('-align', '--align_path',
-                        type=str, default='./data/L0086.jpeg',
+                        type=str, default='/home/saharsh2/VLR-Project/Superglue/test_data/L0086.jpeg',
                         help='Image to align')
     # parser.add_argument('--superglue', choices={'indoor', 'outdoor', 'custom'}, 
     #                     default='custom',
@@ -378,7 +399,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # test_single(args.reference_path)
     # test_two(args.reference_path, args.align_path)
-    test_two(args)
     # test_two_iterative(args.reference_path, args.align_path)
+
+    # test_two(args)
+
+    video_path='/home/saharsh2/VLR-Project/Superglue/test_video/apples.mp4'
+
+    net=cv2.dnn.readNetFromDarknet("/home/saharsh2/VLR-Project/Superglue/yolo_weights/yolov3.cfg","/home/saharsh2/VLR-Project/Superglue/yolo_weights/yolov3_last.weights")
+    tracker=YOLOv7_DeepSORT(reID_model_path="/home/saharsh2/VLR-Project/Superglue/deep_sort/model_weights/mars-small128.pb", detector=net)
+
+    tracker.track_video(video_path, output="./IO_data/output/street_rp.avi",show_live =False, skip_frames = 0, count_objects = True, verbose=1,dir_path='/home/saharsh2/VLR-Project/Superglue/deep_sort/Tests/')
+
     
     

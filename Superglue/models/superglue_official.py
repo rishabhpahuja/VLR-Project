@@ -44,6 +44,7 @@ from copy import deepcopy
 from pathlib import Path
 import torch
 from torch import nn
+import ipdb
 
 
 def MLP(channels: list, do_bn=True):
@@ -218,8 +219,8 @@ class SuperGlue(nn.Module):
 
         bin_score = torch.nn.Parameter(torch.tensor(1.))
         self.register_parameter('bin_score', bin_score)
-        
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # ipdb.set_trace()
         path_alternate = config['weights_path']
         model = torch.load(path_alternate, map_location=device)
 
@@ -227,7 +228,7 @@ class SuperGlue(nn.Module):
             self.load_state_dict(model.state_dict())            
         except:
             self.load_state_dict(torch.load(path_alternate, map_location=device))
-        
+        print("SuperGlue Model Loaded")
         # print('Using {} with {}'.format(path_alternate, config['device']))
 
         # print ("Yayy successfully loaded those weights")

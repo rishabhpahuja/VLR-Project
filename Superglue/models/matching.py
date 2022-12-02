@@ -44,6 +44,10 @@ import torch
 
 from superpoint import SuperPoint
 # from .superglue import SuperGlue
+import sys
+sys.path.insert(3,"/home/saharsh2/VLR-Project/Superglue/models")
+# sys.path.insert(4,"/home/saharsh2/VLR-Project/Superglue/models/superglue_official.py")
+import ipdb
 from superglue_official import SuperGlue
 
 
@@ -51,6 +55,7 @@ class Matching(torch.nn.Module):
     """ Image Matching Frontend (SuperPoint + SuperGlue) """
     def __init__(self, config={}):
         super().__init__()
+        # ipdb.set_trace() # being called every frame
         self.superpoint = SuperPoint(config.get('superpoint', {}))
         self.superglue = SuperGlue(config.get('superglue', {}))
 

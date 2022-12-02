@@ -155,7 +155,7 @@ class SuperMatching():
         }
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         # self.device = 'cpu'
-
+        # ipdb.set_trace() # being called after evry frame
         self.matching = Matching(self.config).eval().to(self.device) # matching.py
 
 # done
