@@ -5,9 +5,11 @@ from . import linear_assignment
 from . import iou_matching
 from .track import Track
 import sys
-sys.path.insert(1,"/home/saharsh2/VLR-Project/Superglue")
-sys.path.insert(2,"/home/saharsh2/VLR-Project/Superglue/models")
+
+# sys.path.insert(1,"/home/saharsh2/VLR-Project/Superglue")
+sys.path.insert(2,"./models")
 import Run_Superglue as sg
+from Run_Superglue import SuperGlueClass
 import ipdb
 
 
@@ -52,6 +54,7 @@ class Tracker:
         self._next_id = 1
         self.frame_t = None
         self.frame_t_1 = None
+        self.sg_object=SuperGlueClass()
 
     def predict(self, prev_frame, frame):
         """Propagate track state distributions one time step forward.
@@ -135,7 +138,7 @@ class Tracker:
         else:#Cascading matchign will be done using superglue
             # ipdb.set_trace()
             matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade_sg(\
-                sg.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
+                self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
                 detections, self.frame_t, self.frame_t_1, confirmed_tracks)
         
         if False: #If true superglue and cosine will be used both for cascade matching

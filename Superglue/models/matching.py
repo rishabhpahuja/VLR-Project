@@ -45,7 +45,7 @@ import torch
 from superpoint import SuperPoint
 # from .superglue import SuperGlue
 import sys
-sys.path.insert(3,"/home/saharsh2/VLR-Project/Superglue/models")
+sys.path.insert(3,"./models")
 # sys.path.insert(4,"/home/saharsh2/VLR-Project/Superglue/models/superglue_official.py")
 import ipdb
 from superglue_official import SuperGlue

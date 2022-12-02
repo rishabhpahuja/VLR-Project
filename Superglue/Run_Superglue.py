@@ -115,7 +115,7 @@ def Superglue_cost(tracks, detections, frame_t,frame_t_1 ,track_indices=None,
     # ipdb.set_trace()
     if superglue_weights_path is None:
         # raise("SuperGlue Weights Path not given")
-        superglue_weights_path = "/home/saharsh2/VLR-Project/Superglue/global_registration_sg.pth" # path not taken for args when integrating
+        superglue_weights_path = "./global_registration_sg.pth" # path not taken for args when integrating
     # ipdb.set_trace() # calling every frame
     
     sg_matching=setup_sg_class(superglue_weights_path)
@@ -365,6 +365,38 @@ def test_two(args):
 
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
+class SuperGlueClass:
+    def __init__(self,superglue_weights_path=None):
+        if superglue_weights_path is None:
+            # raise("SuperGlue Weights Path not given")
+            superglue_weights_path = "./global_registration_sg.pth" # path not taken for args when integrating
+        # ipdb.set_trace() # calling every frame
+        
+        self.sg_matching=setup_sg_class(superglue_weights_path)
+
+
+    def Superglue_cost(self,tracks, detections, frame_t,frame_t_1 ,track_indices=None,
+                detection_indices=None, reference=True):
+        # ipdb.set_trace()
+        
+        # ipdb.set_trace()
+        print("Calculating Superglue Cost")
+
+        if track_indices is None:
+            track_indices = np.arange(len(tracks))
+        if detection_indices is None:
+            detection_indices = np.arange(len(detections))
+
+        cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
+        for row, track_idx in enumerate(track_indices):
+            if tracks[track_idx].time_since_update > 1:
+                cost_matrix[row, :] = linear_assignment.INFTY_COST
+                continue
+
+            bbox = tracks[track_idx].to_tlwh()
+            candidates = np.asarray([detections[i].tlwh for i in detection_indices])
+            cost_matrix[row, :] = 1. - Sg_conf(bbox, candidates, frame_t,frame_t_1,self.sg_matching,reference=reference)
+        return cost_matrix
   
 
 

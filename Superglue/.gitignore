@@ -14,5 +14,5 @@ yolo_weights
 *.avi
 *.png
 *.csv
-/home/swathi/CMU/vlr/vlr-project/saharsh/rishab/VLR-Project/Superglue/superpoint_v1.pth
+*.pth
 test_video

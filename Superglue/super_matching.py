@@ -52,7 +52,7 @@ import matplotlib.cm as cm
 import torch
 import ipdb
 import sys
-sys.path.insert(2,"/home/saharsh2/VLR-Project/Superglue/models")
+sys.path.insert(2,"./models")
 # from IPython import embed
 
 from matching import Matching
