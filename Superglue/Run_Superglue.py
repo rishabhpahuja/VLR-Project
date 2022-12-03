@@ -156,7 +156,9 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         for i in range(len(rect2)):
             image_mask2[int(candidate_tl[1]):int(candidate_br[1]),int(candidate_tl[0]):int(candidate_br[0])]=255
-        img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask1) #This mask is for frame_t_1
+        img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask2) #This mask is for frame_t_11
+
+        cv2.imwrite("mask.png", img2_gray_masked)
 
     # This condi
     if rect1 is not None: 
@@ -166,10 +168,10 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
         mconf, kp1, kp2, matches1, matches2 = sg_matching.detectAndMatch(img1_gray,img2_gray) # only those that match are returned
     
     #! Show matched keypoints
-    for x,y in kp1.astype(np.int64):
-        cv2.circle(img1, (x,y), 2, (255,0,0), -1)
+    for ijk,(x,y) in enumerate(kp1.astype(np.int64)):
+        cv2.circle(img1, (x,y), 5, (255,0,0), -1)
         cv2.circle(img2, (x,y), 2, (0,0,255), -1)
-    # cv2.imwrite("kp.png", img1)
+    cv2.imwrite(str(ijk+1)+"kp.png", img2)
     # ipdb.set_trace()
     # for x,y in kp2.astype(np.int64): 
     # import ipdb; ipdb.set_trace()
