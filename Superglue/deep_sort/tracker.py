@@ -139,7 +139,7 @@ class Tracker:
             # ipdb.set_trace()
             matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade_sg(\
                 self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
-                detections, self.frame_t, self.frame_t_1, confirmed_tracks)
+                detections, self.frame_t, self.frame_t_1, confirmed_tracks,kf=self.kf)
         
         if False: #If true superglue and cosine will be used both for cascade matching
             matches_a, unmatched_tracks_a, unmatched_detections = \
