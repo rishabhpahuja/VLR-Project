@@ -298,8 +298,8 @@ def gate_cost_matrix(
 
 #### overloading for superglue - different arguments 
 
-def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, detections, frame_t, frame_t_1,
-        track_indices=None, detection_indices=None):
+def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, detections, frame_t, frame_t_1, 
+        track_indices=None, detection_indices=None,kf=None):
     """Run matching cascade.
 
     Parameters
@@ -362,14 +362,14 @@ def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, de
         matches_l, _, unmatched_detections = \
             min_cost_matching_sg(
                 distance_metric, max_distance, tracks, detections,frame_t, frame_t_1,
-                track_indices_l, unmatched_detections)
+                track_indices_l, unmatched_detections,kf)
         matches += matches_l
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
     return matches, unmatched_tracks, unmatched_detections
 
 
 def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, frame_t, frame_t_1, 
-            track_indices=None,detection_indices=None):
+            track_indices=None,detection_indices=None,kf=None):
     """Solve linear assignment problem.
 
     Parameters
@@ -413,7 +413,10 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
         return [], track_indices, detection_indices  # Nothing to match.
 
     # ipdb.set_trace()
-    cost_matrix = distance_metric(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices) 
+    cost_matrix = distance_metric(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices)
+    cost_matrix = gate_cost_matrix(
+                kf, cost_matrix, tracks, detections, track_indices,
+                detection_indices) 
     # calls gated_metric - tracks x detctions
     # 4th frame mein - 5th row 4th column becomes a Nan
 
