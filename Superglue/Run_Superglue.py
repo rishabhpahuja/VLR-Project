@@ -18,6 +18,8 @@ from  bridge_wrapper import *
 import cv2
 
 # from IPython import embed
+global tt
+tt = 0
 
 def transf_matrix(theta=0, translation=[0,0]):
     assert len(translation) == 2
@@ -153,12 +155,14 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
         img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1) #This mask is for frame_t
         # ipdb.set_trace()
 
+        cv2.imwrite("mask1.png", img1_gray_masked)
+
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         for i in range(len(rect2)):
             image_mask2[int(candidate_tl[1]):int(candidate_br[1]),int(candidate_tl[0]):int(candidate_br[0])]=255
         img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask2) #This mask is for frame_t_11
 
-        cv2.imwrite("mask.png", img2_gray_masked)
+        cv2.imwrite("mask2.png", img2_gray_masked)
 
     # This condi
     if rect1 is not None: 
@@ -170,8 +174,12 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
     #! Show matched keypoints
     for ijk,(x,y) in enumerate(kp1.astype(np.int64)):
         cv2.circle(img1, (x,y), 5, (255,0,0), -1)
-        cv2.circle(img2, (x,y), 2, (0,0,255), -1)
-    cv2.imwrite(str(ijk+1)+"kp.png", img2)
+    for ijk,(x,y) in enumerate(kp2.astype(np.int64)):
+        cv2.circle(img2, (x,y), 5, (0,0,255), -1)
+    # print(ijk)
+    cv2.imwrite("kp1.png", img1)
+    cv2.imwrite("kp2.png", img2)
+
     # ipdb.set_trace()
     # for x,y in kp2.astype(np.int64): 
     # import ipdb; ipdb.set_trace()

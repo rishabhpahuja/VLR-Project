@@ -198,6 +198,7 @@ class YOLOv7_DeepSORT:
             cv2.imwrite(name,frame)
             # ipdb.set_trace()
             prev_frame = frame_copy
+            # ipdb.set_trace()
         cv2.destroyAllWindows()
 
 
