@@ -31,7 +31,16 @@ This folder consists of the script to use superglue algorithm. To run this scrip
 This script shall require two pre-trained weights, one of which is already present at the desired location. The second set of weights can be downloaded from the link:
 (https://drive.google.com/drive/folders/1WzrzGSEhuEaT8cDBWh1PfyI9nx9kbw1J?usp=share_link). The location of these weights can be passed as an argument while runnng the file Run_Superglue.py 
 
+To Run YOLO-V7:
+1)Uncomment the lines mentioned in run_tracker.py
+2)Download Pre-Trained weights from the link below.
+wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt
+
+
+
+
 ### **Arguments:** ###
 1. **ref:** The reference image wrt to which the features of another image have to be matched to
 2. **align:** The image whose features have to be matched to reference image
 3. **weights:** The location of superglue weights
+
