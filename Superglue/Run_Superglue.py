@@ -100,7 +100,7 @@ def increase_rectangle(bbox, pixels,min_=False, max_=False,img_size=(1536,2048))
 def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching,reference):
 
     mconf_row=np.zeros((1,len(candidates)))
-    pixels = 0
+    pixels = 10
     bbox_tl, bbox_br = increase_rectangle(bbox[:2],pixels=pixels,max_=True) , increase_rectangle(bbox[:2] + bbox[2:],pixels=pixels,min_=True,img_size=frame_t.shape)
     candidates_tl = candidates[:, :2]
     candidates_br = candidates[:, :2] + candidates[:, 2:]
@@ -468,7 +468,7 @@ if __name__ == "__main__":
     net=cv2.dnn.readNetFromDarknet("/home/saharsh2/VLR-Project/Superglue/yolo_weights/yolov3.cfg","/home/saharsh2/VLR-Project/Superglue/yolo_weights/yolov3_last.weights")
     tracker=YOLOv7_DeepSORT(reID_model_path="/home/saharsh2/VLR-Project/Superglue/deep_sort/model_weights/mars-small128.pb", detector=net)
 
-    tracker.track_video(video_path, output="./IO_data/output/SG_C0_48_expand_0_rect.avi",show_live =False, skip_frames = 0, count_objects = True, verbose=1,dir_path='/home/saharsh2/VLR-Project/Superglue/deep_sort/Tests/')
+    tracker.track_video(video_path, output="./IO_data/output/SG_C0_48_expand_10_rect_with_det.avi",show_live =False, skip_frames = 0, count_objects = True, verbose=1,dir_path='/home/saharsh2/VLR-Project/Superglue/deep_sort/Tests/')
 
     
     

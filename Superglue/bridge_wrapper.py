@@ -60,7 +60,7 @@ class YOLOv7_DeepSORT:
         self.tracker = Tracker(metric) # initialize tracker
 
 
-    def track_video(self,video:str, output:str, skip_frames:int=0, show_live:bool=False, count_objects:bool=False, verbose:int = 0, YOLOVER='V3',dir_path='./'):
+    def track_video(self,video:str, output:str, skip_frames:int=0, show_live:bool=False, count_objects:bool=False, verbose:int = 0, YOLOVER='V3',dir_path='./', plt_unmatched_det= False):
         '''
         Track any given webcam or video
         args: 
@@ -152,6 +152,12 @@ class YOLOv7_DeepSORT:
             unmatched_tracks,unmatched_detections=self.tracker.update(detections) #  update using Kalman Gain
             # update - step 12 in my notebook
             import ipdb; #ipdb.set_trace()
+            
+            if plt_unmatched_det:
+                for ud in unmatched_detections:
+                    # print(ud)
+                    tlbr_det = ud.to_tlbr()
+                    cv2.rectangle(frame,(int(tlbr_det[0]), int(tlbr_det[1])), (int(tlbr_det[2]), int(tlbr_det[3])), (255,0,0), 5)
 
             for track in self.tracker.tracks:  # update new findings AKA tracks  
                 # if not track.is_confirmed(): #or track.time_since_update > 1:
@@ -160,8 +166,9 @@ class YOLOv7_DeepSORT:
                 class_name = track.get_class()
 
                 if track.time_since_update<1: # it means the track is not on kalman basis 
-                    color = colors[int(track.track_id) % len(colors)]  # draw bbox on screen
-                    color = [i * 255 for i in color]
+                    # color = colors[int(track.track_id) % len(colors)]  # draw bbox on screen
+                    # color = [i * 255 for i in color]
+                    color = (0,255,0) # changed code 
                     text_color=(255,255,255)
                 else:
                     color=(255,255,255)
@@ -192,9 +199,9 @@ class YOLOv7_DeepSORT:
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
             if frame_num>9 and frame_num<100:
-                name=dir_path+'0'+str(frame_num)+'_SG_C0.48_notexp.png'
+                name=dir_path+'0'+str(frame_num)+'_SG_C0.48_exp_det.png'
             elif frame_num<10:
-                name=dir_path+'00'+str(frame_num)+'_SG_C0.48_notexp.png'
+                name=dir_path+'00'+str(frame_num)+'_SG_C0.48_exp_det.png'
             cv2.imwrite(name,frame)
             # #ipdb.set_trace()
             prev_frame = frame_copy
