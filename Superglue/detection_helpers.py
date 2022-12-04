@@ -2,6 +2,7 @@
 import cv2
 import torch
 from numpy import random
+import os
 
 from ds_models.experimental import attempt_load
 from utils.datasets import letterbox, np
@@ -20,7 +21,8 @@ class Detector:
         save_conf: whether to save confidences in 'save_txt' labels afters inference
         classes: Filter by class from COCO. can be in the format [0] or [0,1,2] etc
         '''
-        self.device = select_device("cuda" if torch.cuda.is_available() else 'cpu')
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
+        self.device = torch.device('cuda:0')#select_device("cuda" if torch.cuda.is_available() else 'cpu')
         self.conf_thres = conf_thres
         self.iou_thres = iou_thresh
         self.classes = classes

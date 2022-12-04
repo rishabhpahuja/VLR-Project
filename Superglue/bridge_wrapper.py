@@ -102,10 +102,15 @@ class YOLOv7_DeepSORT:
                 continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
             if verbose >= 1:
                 start_time = time.time()
+            # import ipdb; ipdb.set_trace()
 
             # -----------------------------------------PUT ANY DETECTION MODEL HERE -----------------------------------------------------------------
             if YOLOVER=='V3': # using V3 only 
                 yolo_dets, scores, class_ID=YOLOV3(self.detector,frame)
+                count = len(class_ID) # number of detections - 7 for frame 1
+                #Class number. It will be zero for our case since there is only one class
+                # obviously all 7 are apple
+                names=np.array(["Apple"]*count)
                 # print(yolo_dets)
                 # first frame - [[1717, 680, 90, 77], [957, 1072, 79, 92], [1656, 326, 90, 73], [753, 1114, 79, 94], [1219, 231, 96, 76], [815, 471, 77, 76], [1516, 881, 79, 82]]
                 # bounding boxes 
@@ -117,15 +122,31 @@ class YOLOv7_DeepSORT:
                 # print(class_ID) # [0, 0, 0, 0, 0, 0, 0] - apple only 
             
             else:
-                yolo_dets = self.detector.detect(frame.copy(), plot_bb = False)  # Get the detections
+                
+                yolo_detects = self.detector.detect(frame.copy(), plot_bb = False)  # Get the detections
+                if yolo_detects is None:
+                    yolo_dets = []
+                    scores = []
+                    class_ID = []
+                    num_objects = 0
+            
+                else:
+                    bboxes = yolo_detects[:,:4]
+                    bboxes[:,2] = bboxes[:,2] - bboxes[:,0] # convert from xyxy to xywh
+                    bboxes[:,3] = bboxes[:,3] - bboxes[:,1]
+                    yolo_dets=(bboxes.squeeze()).tolist()
+
+                    scores =( yolo_detects[:,4].squeeze()).tolist()
+                    class_ID =( yolo_detects[:,-1].squeeze()).tolist()
+                    count = len(class_ID)
+                    names=np.array(["Pedestrian"]*count)
+                    num_objects = bboxes.shape[0]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
             # ---------------------------------------- DETECTION PART COMPLETED ---------------------------------------------------------------------
             
             
-            count = len(class_ID) # number of detections - 7 for frame 1
-            #Class number. It will be zero for our case since there is only one class
-            names=np.array(["Apple"]*count) # obviously all 7 are apple
+            
 
 
             if count_objects: # has been made true from run_tracker.py

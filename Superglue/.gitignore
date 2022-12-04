@@ -15,4 +15,6 @@ yolo_weights
 *.png
 *.csv
 *.pth
+*.mp4
+*.pt
 test_video
