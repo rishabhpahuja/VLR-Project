@@ -132,12 +132,12 @@ class Tracker:
         unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
         # Associate confirmed tracks using appearance features.
-        if False: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
+        if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
             matches_a, unmatched_tracks_a, unmatched_detections = \
                 linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
                     self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
-        if True:#Cascading matchign will be done using superglue
+        if False:#Cascading matchign will be done using superglue
             # #ipdb.set_trace()
             matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade_sg(\
                 self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,

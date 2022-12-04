@@ -102,7 +102,7 @@ class YOLOv7_DeepSORT:
                 continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
             if verbose >= 1:
                 start_time = time.time()
-            # import ipdb; ipdb.set_trace()
+            
 
             # -----------------------------------------PUT ANY DETECTION MODEL HERE -----------------------------------------------------------------
             if YOLOVER=='V3': # using V3 only 
@@ -129,17 +129,20 @@ class YOLOv7_DeepSORT:
                     scores = []
                     class_ID = []
                     num_objects = 0
+                    count=0
+                    names=np.array(["P"]*count)
             
                 else:
+                    # import ipdb; ipdb.set_trace()
                     bboxes = yolo_detects[:,:4]
                     bboxes[:,2] = bboxes[:,2] - bboxes[:,0] # convert from xyxy to xywh
                     bboxes[:,3] = bboxes[:,3] - bboxes[:,1]
-                    yolo_dets=(bboxes.squeeze()).tolist()
+                    yolo_dets=(bboxes).tolist()
 
-                    scores =( yolo_detects[:,4].squeeze()).tolist()
-                    class_ID =( yolo_detects[:,-1].squeeze()).tolist()
+                    scores =( yolo_detects[:,4]).tolist()
+                    class_ID =( yolo_detects[:,-1]).tolist()
                     count = len(class_ID)
-                    names=np.array(["Pedestrian"]*count)
+                    names=np.array(["P"]*count)
                     num_objects = bboxes.shape[0]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
@@ -220,9 +223,9 @@ class YOLOv7_DeepSORT:
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
             if frame_num>9 and frame_num<100:
-                name=dir_path+'0'+str(frame_num)+'_SG_C0.48_exp_det.png'
+                name=dir_path+'0'+str(frame_num)+'_DS_C0.48_exp_det.png'
             elif frame_num<10:
-                name=dir_path+'00'+str(frame_num)+'_SG_C0.48_exp_det.png'
+                name=dir_path+'00'+str(frame_num)+'_DS_C0.48_exp_det.png'
             cv2.imwrite(name,frame)
             # #ipdb.set_trace()
             prev_frame = frame_copy

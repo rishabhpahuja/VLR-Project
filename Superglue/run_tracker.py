@@ -20,7 +20,7 @@ import ipdb
 
 detector = Detector(classes = [0]) # it'll detect ONLY [person,horses,sports ball]. class = None means detect all classes. List info at: "data/coco.yaml"
 detector.load_model('./yolov7x.pt')
-video_path='./test_video/Pedestrian-9.mp4'
+video_path='./test_video/Stepladder_work.MP4'
 YOLOVER='V7'
 
 

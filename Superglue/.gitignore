@@ -10,6 +10,8 @@ validate.py
 __pycache__
 backup_V3
 yolo_weights
+Deepsort-SG-Im
+DS_Cosine-Im
 *.jpg
 *.avi
 *.png
