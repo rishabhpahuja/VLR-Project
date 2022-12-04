@@ -90,13 +90,13 @@ class YOLOv7_DeepSORT:
         prev_frame = None
         while True: # while video is running
             return_value, frame = vid.read()
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             frame_copy = copy.deepcopy(frame)
             if not return_value:
                 print('Video has ended or failed!')
                 break
             frame_num +=1
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
 
             if skip_frames and not frame_num % skip_frames: 
                 continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
@@ -135,7 +135,7 @@ class YOLOv7_DeepSORT:
             
 
             # ---------------------------------- DeepSORT tacker work starts here ------------------------------------------------------------
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             features = self.encoder(frame, yolo_dets) # encode detections and feed to tracker. [No of BB / detections per frame, embed_size] - 7,128 
             # features is after the bounding boxes go through the deepsort feature extracting network
             
@@ -146,12 +146,12 @@ class YOLOv7_DeepSORT:
             cmap = plt.get_cmap('tab20b') #initialize color map
             colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]   # can't detect more than 20 at once ??
             # each has 3 values
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             self.tracker.predict(prev_frame, frame)  # Call the tracker - nothing with the cost yet
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             unmatched_tracks,unmatched_detections=self.tracker.update(detections) #  update using Kalman Gain
             # update - step 12 in my notebook
-            # import ipdb; ipdb.set_trace()
+            import ipdb; #ipdb.set_trace()
 
             for track in self.tracker.tracks:  # update new findings AKA tracks  
                 # if not track.is_confirmed(): #or track.time_since_update > 1:
@@ -159,7 +159,7 @@ class YOLOv7_DeepSORT:
                 bbox = track.to_tlbr()
                 class_name = track.get_class()
 
-                if track.time_since_update<2:
+                if track.time_since_update<1: # it means the track is not on kalman basis 
                     color = colors[int(track.track_id) % len(colors)]  # draw bbox on screen
                     color = [i * 255 for i in color]
                     text_color=(255,255,255)
@@ -175,7 +175,7 @@ class YOLOv7_DeepSORT:
                     
             # -------------------------------- Tracker work ENDS here -----------------------------------------------------------------------
             # for track in unmatched_tracks:
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             if verbose >= 1:
                 fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
                 if not count_objects: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)}")
@@ -192,18 +192,18 @@ class YOLOv7_DeepSORT:
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
             if frame_num>9 and frame_num<100:
-                name=dir_path+'0'+str(frame_num)+'.png'
+                name=dir_path+'0'+str(frame_num)+'_SG_C0.48_notexp.png'
             elif frame_num<10:
-                name=dir_path+'00'+str(frame_num)+'.png'
+                name=dir_path+'00'+str(frame_num)+'_SG_C0.48_notexp.png'
             cv2.imwrite(name,frame)
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
             prev_frame = frame_copy
-            # ipdb.set_trace()
+            # #ipdb.set_trace()
         cv2.destroyAllWindows()
 
 
 def YOLOV3(model, frame):
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     blob = cv2.dnn.blobFromImage(frame, 1/255,(416,416),(0,0,0),swapRB = True,crop= False) # 1,3,416,416 - image not cropped but resized
     # crops image from centre 
     # normalize by dividing by 255
@@ -231,7 +231,7 @@ def YOLOV3(model, frame):
             if confidence>0.7:
                 center_x = int(detection[0] * width)
                 center_y = int(detection[1] * hight)
-                # ipdb.set_trace()
+                # #ipdb.set_trace()
                 w = int(detection[2] * width)
                 h = int(detection[3]* hight)
                 x = int(center_x - w/2)

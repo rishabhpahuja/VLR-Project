@@ -52,7 +52,7 @@ def min_cost_matching_two_metrics(distance_metric1, max_distance1, distance_metr
     if len(detection_indices) == 0 or len(track_indices) == 0:
         return [], track_indices, detection_indices  # Nothing to match.
 
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     cost_matrix1 = distance_metric1(tracks, detections, track_indices, detection_indices) # calls gated_metric - tracks x detctions
     cost_matrix1[cost_matrix1 > max_distance1] = max_distance1 + 1e-5 # max distance is 0.4
     cost_matrix2 = distance_metric2(tracks, detections, track_indices, detection_indices) # calls gated_metric - tracks x detctions
@@ -90,7 +90,7 @@ def matching_cascade_using_two_metrics(distance_metric1,distance_metric2 ,max_di
 
     unmatched_detections = detection_indices
     matches = []
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     for level in range(cascade_depth): #casade_depth - max_age "of" tracks
         if len(unmatched_detections) == 0:  # No detections left
             break
@@ -98,7 +98,7 @@ def matching_cascade_using_two_metrics(distance_metric1,distance_metric2 ,max_di
         track_indices_l = [
             k for k in track_indices
             if tracks[k].time_since_update == 1 + level
-        ]
+        ] # sorts in ascending order of trackes ages 
         if len(track_indices_l) == 0:  # Nothing to match at this level
             continue
 
@@ -145,15 +145,16 @@ def min_cost_matching(distance_metric, max_distance, tracks, detections, track_i
         * A list of unmatched detection indices.
 
     """
+    #ipdb.set_trace()
     if track_indices is None:
         track_indices = np.arange(len(tracks))
     if detection_indices is None:
         detection_indices = np.arange(len(detections))
-
+    # #ipdb.set_trace()
     if len(detection_indices) == 0 or len(track_indices) == 0:
-        return [], track_indices, detection_indices  # Nothing to match.
+        return [], track_indices, detection_indices  # Nothing to match for frame 1
 
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     cost_matrix = distance_metric(tracks, detections, track_indices, detection_indices) # calls gated_metric - tracks x detctions
     cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5 # max distance is 0.4
     indices = linear_sum_assignment(cost_matrix) #Link the detection to tracker
@@ -162,8 +163,8 @@ def min_cost_matching(distance_metric, max_distance, tracks, detections, track_i
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):
         if col not in indices[:, 1]:
-            unmatched_detections.append(detection_idx)
-    for row, track_idx in enumerate(track_indices):
+            unmatched_detections.append(detection_idx) # no 7 track - the detection that did not find its track
+    for row, track_idx in enumerate(track_indices): 
         if row not in indices[:, 0]:
             unmatched_tracks.append(track_idx)
     for row, col in indices:
@@ -174,6 +175,7 @@ def min_cost_matching(distance_metric, max_distance, tracks, detections, track_i
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
+    #ipdb.set_trace()
     return matches, unmatched_tracks, unmatched_detections
 
 def matching_cascade(distance_metric, max_distance, cascade_depth, tracks, detections,
@@ -217,7 +219,7 @@ def matching_cascade(distance_metric, max_distance, cascade_depth, tracks, detec
         * A list of unmatched detection indices.
 
     """
-    # import ipdb; ipdb.set_trace()
+    #ipdb.set_trace()
     if track_indices is None:
         track_indices = list(range(len(tracks)))
     if detection_indices is None:
@@ -225,11 +227,12 @@ def matching_cascade(distance_metric, max_distance, cascade_depth, tracks, detec
 
     unmatched_detections = detection_indices
     matches = []
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     for level in range(cascade_depth): #casade_depth - max_age "of" tracks
         if len(unmatched_detections) == 0:  # No detections left
             break
-
+        
+        #ipdb.set_trace()
         track_indices_l = [
             k for k in track_indices
             if tracks[k].time_since_update == 1 + level
@@ -243,6 +246,7 @@ def matching_cascade(distance_metric, max_distance, cascade_depth, tracks, detec
                 track_indices_l, unmatched_detections)
         matches += matches_l
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
+    #ipdb.set_trace()
     return matches, unmatched_tracks, unmatched_detections
 
 
@@ -283,16 +287,19 @@ def gate_cost_matrix(
         Returns the modified cost matrix.
 
     """
-    # ipdb.set_trace()
+    ##ipdb.set_trace()
     gating_dim = 2 if only_position else 4
-    gating_threshold = kalman_filter.chi2inv95[gating_dim]
+    gating_threshold = kalman_filter.chi2inv95[gating_dim] ## 9.4877
+    # print(cost_matrix)
     measurements = np.asarray(
         [detections[i].to_xyah() for i in detection_indices])
     for row, track_idx in enumerate(track_indices):
         track = tracks[track_idx]
         gating_distance = kf.gating_distance(
-            track.mean, track.covariance, measurements, only_position)
+            track.mean, track.covariance, measurements, only_position) # distance between each track and all detections 
         cost_matrix[row, gating_distance > gating_threshold] = gated_cost
+        # array([     7775.8,      5098.1,      3049.8,      868.25,      1677.3,      8303.9,     0.65358,        6097,      5040.7])
+        #ipdb.set_trace()
     return cost_matrix
 
 
@@ -339,7 +346,7 @@ def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, de
         * A list of unmatched detection indices.
 
     """
-    # import ipdb; ipdb.set_trace()
+    #ipdb.set_trace()
     if track_indices is None:
         track_indices = list(range(len(tracks)))
     if detection_indices is None:
@@ -347,7 +354,7 @@ def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, de
 
     unmatched_detections = detection_indices
     matches = []
-    # ipdb.set_trace()
+    # #ipdb.set_trace()
     for level in range(cascade_depth): #casade_depth - max_age "of" tracks
         if len(unmatched_detections) == 0:  # No detections left
             break
@@ -358,13 +365,14 @@ def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, de
         ]
         if len(track_indices_l) == 0:  # Nothing to match at this level
             continue
-
+        #ipdb.set_trace()    
         matches_l, _, unmatched_detections = \
             min_cost_matching_sg(
                 distance_metric, max_distance, tracks, detections,frame_t, frame_t_1,
                 track_indices_l, unmatched_detections,kf)
         matches += matches_l
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
+    #ipdb.set_trace()
     return matches, unmatched_tracks, unmatched_detections
 
 
@@ -404,6 +412,7 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
         * A list of unmatched detection indices.
 
     """
+    #ipdb.set_trace()
     if track_indices is None:
         track_indices = np.arange(len(tracks))
     if detection_indices is None:
@@ -412,16 +421,18 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
     if len(detection_indices) == 0 or len(track_indices) == 0:
         return [], track_indices, detection_indices  # Nothing to match.
 
-    # ipdb.set_trace()
     cost_matrix = distance_metric(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices)
+    
+    #testing without it 
     cost_matrix = gate_cost_matrix(
                 kf, cost_matrix, tracks, detections, track_indices,
-                detection_indices) 
+                detection_indices) # mahalanobis distance - cost_matrix # tracks x detections
+
     # calls gated_metric - tracks x detctions
     # 4th frame mein - 5th row 4th column becomes a Nan
 
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5 # max distance is 0.4
-    # ipdb.set_trace()
+    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5 # max distance is 0.48
+    # #ipdb.set_trace()
     indices = linear_sum_assignment(cost_matrix) #Link the detection to tracker
     indices = np.asarray(indices) #Makes a 2D array with row at indices at row 0 and column indices at row 1
     indices = np.transpose(indices) #Convert it in the form of (row,column)
@@ -440,4 +451,5 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
+    #ipdb.set_trace()
     return matches, unmatched_tracks, unmatched_detections
