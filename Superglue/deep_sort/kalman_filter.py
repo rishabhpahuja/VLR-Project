@@ -83,7 +83,7 @@ class KalmanFilter(object):
         mean_pos = measurement # takes one boundiing box at a time 
         mean_vel = np.zeros_like(mean_pos)
         mean = np.r_[mean_pos, mean_vel] # concats to form - [       1762,       718.5,      1.1688,          77,           0,           0,           0,           0]
-        mean[4]=-15 # why this minus 33 ??? Ask Rishabh
+        # mean[4]=-15 # why this minus 33 ??? Ask Rishabh
 
         std = [
             2 * self._std_weight_position * measurement[3],

@@ -45,7 +45,7 @@ class Tracker:
 # done
 # n_init - itni der ke andar detect nahi hua to deleted
 # max_age - itni der tak nahi dikha toh uda dega 
-    def __init__(self, metric, max_iou_distance=0.7, max_age=20, n_init=1,max_sg_distance=0.48):
+    def __init__(self, metric, max_iou_distance=0.7, max_age=75, n_init=1,max_sg_distance=0.48):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
@@ -157,7 +157,7 @@ class Tracker:
             self.tracks[k].time_since_update != 1]
         
         # #ipdb.set_trace()
-        if False: #if True, iou matching will be done usign superglue
+        if True: #if True, iou matching will be done usign superglue
             matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg(\
                     distance_metric= sg.Superglue_cost, \
                     max_distance= self.max_sg_distance, \
@@ -166,11 +166,12 @@ class Tracker:
                     frame_t= self.frame_t, \
                     frame_t_1= self.frame_t_1, \
                     track_indices= iou_track_candidates,\
-                    detection_indices= unmatched_detections)
+                    detection_indices= unmatched_detections,
+                    kf = self.kf)
             
             matches=matches_a+matches_c
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c))
-        if True: #IOU mtric will be used for IOU matching
+        if False: #IOU mtric will be used for IOU matching
             # #ipdb.set_trace()
             matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,

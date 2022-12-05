@@ -184,22 +184,21 @@ class YOLOv7_DeepSORT:
                     cv2.rectangle(frame,(int(tlbr_det[0]), int(tlbr_det[1])), (int(tlbr_det[2]), int(tlbr_det[3])), (255,0,0), 5)
 
             for track in self.tracker.tracks:  # update new findings AKA tracks  
-                # if not track.is_confirmed(): #or track.time_since_update > 1:
-                #     continue 
+                if not track.is_confirmed() or track.time_since_update > 1:
+                    continue 
                 bbox = track.to_tlbr()
                 class_name = track.get_class()
 
-                if track.time_since_update<1: # it means the track is not on kalman basis 
-                    # color = colors[int(track.track_id) % len(colors)]  # draw bbox on screen
-                    # color = [i * 255 for i in color]
-                    color = (0,255,0) # changed code 
-                    text_color=(255,255,255)
-                else:
-                    color=(255,255,255)
-                    text_color=(0,0,0)
+                # color = colors[int(track.track_id) % len(colors)]  # draw bbox on screen
+                # color = [i * 255 for i in color]
+                color = (0,255,0) # changed code 
+                text_color=(255,255,255)
+                # else:
+                #     color=(255,255,255)
+                #     text_color=(0,0,0)
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color, 2)
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(class_name)+len(str(track.track_id)))*20, int(bbox[1])), color, -1) #To make a solid rectangle box to write text on
-                cv2.putText(frame, class_name + " : " + str(track.track_id),(int(bbox[0]), int(bbox[1]-11)),0, 0.8, (text_color),2, lineType=cv2.LINE_AA)  
+                cv2.putText(frame, class_name + ":" + str(track.track_id),(int(bbox[0]), int(bbox[1]-11)),0, 0.8, (text_color),2, lineType=cv2.LINE_AA)  
                 cv2.putText(frame, "Frame_num:"+str(frame_num),(len(frame[0])-300,len(frame)-100),0, 1.2, (255,255,255),2, lineType=cv2.LINE_AA)  
                 if verbose == 2:
                     print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
@@ -223,9 +222,13 @@ class YOLOv7_DeepSORT:
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
             if frame_num>9 and frame_num<100:
-                name=dir_path+'0'+str(frame_num)+'_DS_C0.48_exp_det.png'
+                name=dir_path+'00'+str(frame_num)+'.png'
             elif frame_num<10:
-                name=dir_path+'00'+str(frame_num)+'_DS_C0.48_exp_det.png'
+                name=dir_path+'000'+str(frame_num)+'.png'
+            elif frame_num >99 and frame_num < 1000:
+                 name=dir_path+'0'+str(frame_num)+'.png'
+            elif frame_num >999 and frame_num < 10000:
+                 name=dir_path+str(frame_num)+'.png'
             cv2.imwrite(name,frame)
             # #ipdb.set_trace()
             prev_frame = frame_copy

@@ -100,7 +100,7 @@ def increase_rectangle(bbox, pixels,min_=False, max_=False,img_size=(1536,2048))
 def Sg_conf(bbox, candidates,frame_t, frame_t_1,sg_matching,reference):
 
     mconf_row=np.zeros((1,len(candidates)))
-    pixels = 10
+    pixels = 50
     bbox_tl, bbox_br = increase_rectangle(bbox[:2],pixels=pixels,max_=True) , increase_rectangle(bbox[:2] + bbox[2:],pixels=pixels,min_=True,img_size=frame_t.shape)
     candidates_tl = candidates[:, :2]
     candidates_br = candidates[:, :2] + candidates[:, 2:]

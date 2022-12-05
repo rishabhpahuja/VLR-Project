@@ -35,10 +35,10 @@ tracker=YOLOv7_DeepSORT(reID_model_path="./deep_sort/model_weights/mars-small128
 
 # ipdb.set_trace()
 date = datetime.datetime.now()
-experiment_name = "DeepSort"
-exp_directory = experiment_name + '_' + date.strftime("%m-%d_%H:%M:%S")
+experiment_name = "Stepladder1_ds_newkf-sg_cos"
+exp_directory = experiment_name #+ '_' + date.strftime("%m-%d_%H:%M:%S")
 curr_dir=os.getcwd()+'/Tests/'
 os.mkdir(os.path.join('./Tests', exp_directory))
 
 
-tracker.track_video(video_path, output="./IO_data/output/street_rp.avi",show_live =False, skip_frames = 0, count_objects = True, verbose=1,YOLOVER=YOLOVER,dir_path=exp_directory)
+tracker.track_video(video_path, output="./IO_data/output/ds_stepladder_newkf_sg_cos.avi",show_live =False, skip_frames = 0, count_objects = True, verbose=1,YOLOVER=YOLOVER,dir_path=exp_directory)
