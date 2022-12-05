@@ -132,12 +132,12 @@ class Tracker:
         unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
         # Associate confirmed tracks using appearance features.
-        if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
+        if False: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
             matches_a, unmatched_tracks_a, unmatched_detections = \
                 linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
                     self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
-        if False:#Cascading matchign will be done using superglue
+        if True:#Cascading matchign will be done using superglue
             # #ipdb.set_trace()
             matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade_sg(\
                 self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
@@ -157,7 +157,7 @@ class Tracker:
             self.tracks[k].time_since_update != 1]
         
         # #ipdb.set_trace()
-        if True: #if True, iou matching will be done usign superglue
+        if False: #if True, iou matching will be done usign superglue
             matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg(\
                     distance_metric= sg.Superglue_cost, \
                     max_distance= self.max_sg_distance, \
@@ -171,7 +171,7 @@ class Tracker:
             
             matches=matches_a+matches_c
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c))
-        if False: #IOU mtric will be used for IOU matching
+        if True: #IOU mtric will be used for IOU matching
             # #ipdb.set_trace()
             matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
