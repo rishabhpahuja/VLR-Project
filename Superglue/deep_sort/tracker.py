@@ -135,7 +135,7 @@ class Tracker:
 
         # Associate confirmed tracks using appearance features.
         if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
-            matches_a, unmatched_tracks_a, unmatched_detections = \
+            matches_a, unmatched_tracks_a, unmatched_detections_a = \
                 linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
                     self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
@@ -151,10 +151,10 @@ class Tracker:
                 self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
         # Associate remaining tracks together with unconfirmed tracks using IOU.
-        iou_track_candidates = unconfirmed_tracks + [
+        sg_track_candidates = unconfirmed_tracks + [
             k for k in unmatched_tracks_a if
             self.tracks[k].time_since_update == 1]
-        unmatched_tracks_a = [
+        unmatched_tracks_sg = [
             k for k in unmatched_tracks_a if
             self.tracks[k].time_since_update != 1]
         # Second Cacade  Use Supeglue
@@ -177,9 +177,9 @@ class Tracker:
                     detections= detections, \
                     frame_t= self.frame_t, \
                     frame_t_1= self.frame_t_1, \
-                    track_indices= iou_track_candidates,\
+                    track_indices= sg_track_candidates,\
                     detection_indices= unmatched_detections,
-                    kf = self.kf,gated_metric=False)
+                    kf = self.kf,use_gated=False)
         
         if False: #If true superglue and cosine will be used both for cascade matching
             matches_a, unmatched_tracks_a, unmatched_detections = \
@@ -187,10 +187,10 @@ class Tracker:
                 self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
         # Associate remaining tracks together with unconfirmed tracks using IOU.
-        iou_track_candidates = unconfirmed_tracks + [
+        iou_track_candidates = unmatched_tracks_sg + [
             k for k in unmatched_tracks_b if
             self.tracks[k].time_since_update == 1]
-        unmatched_tracks_b = [
+        unmatched_tracks_iou = [
             k for k in unmatched_tracks_b if
             self.tracks[k].time_since_update != 1]
 

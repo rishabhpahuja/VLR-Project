@@ -116,7 +116,7 @@ class SuperMatching():
         self.max_length = -1    # Maximum number of pairs to evaluate
         self.max_keypoints = 1024 # Maximum number of keypoints detected by Superpoint (-1=keeps all keypoints)
         self.keypoint_threshold = 0.005
-        self.nms_radius = 4     # SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)'
+        self.nms_radius = 2     # SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)'
         self.weights = 'custom'
         self.weights_path = ''
         self.sinkhorn_iterations = 20 # Number of Sinkhorn iterations performed by SuperGlue
