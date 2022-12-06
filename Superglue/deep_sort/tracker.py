@@ -220,6 +220,23 @@ class Tracker:
             # print(matches)
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
             #ipdb.set_trace()
+        
+        if False: #if True, occlussion csses will be dealt by IOU and superglue both
+            matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg_iou(\
+                    distance_metric1= sg.Superglue_cost, \
+                    distance_metric1= iou_matching.iou_cost,\
+                    max_distance= self.max_sg_distance, \
+                    tracks= self.tracks, \
+                    detections= detections, \
+                    frame_t= self.frame_t, \
+                    frame_t_1= self.frame_t_1, \
+                    track_indices= iou_track_candidates,\
+                    detection_indices= unmatched_detections,
+                    kf = self.kf,gated_metric=False,
+                    lambda_=0.75)
+            
+            matches=matches_a+matches_c+matches_b
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
 #done
     def _initiate_track(self, detection):
