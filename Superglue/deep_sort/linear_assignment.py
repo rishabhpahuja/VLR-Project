@@ -377,7 +377,7 @@ def matching_cascade_sg(distance_metric, max_distance, cascade_depth, tracks, de
 
 
 def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, frame_t, frame_t_1, 
-            track_indices=None,detection_indices=None,kf=None):
+            track_indices=None,detection_indices=None,kf=None,use_gated=True):
     """Solve linear assignment problem.
 
     Parameters
@@ -424,13 +424,13 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
     cost_matrix = distance_metric(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices)
     
     #testing without it 
-    cost_matrix = gate_cost_matrix(
+    if use_gated:
+        cost_matrix = gate_cost_matrix(
                 kf, cost_matrix, tracks, detections, track_indices,
                 detection_indices) # mahalanobis distance - cost_matrix # tracks x detections
 
     # calls gated_metric - tracks x detctions
     # 4th frame mein - 5th row 4th column becomes a Nan
-
     cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5 # max distance is 0.48
     # #ipdb.set_trace()
     indices = linear_sum_assignment(cost_matrix) #Link the detection to tracker
