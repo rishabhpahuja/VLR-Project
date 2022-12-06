@@ -171,7 +171,7 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
         img1_gray_masked=cv2.bitwise_and(img1_gray,image_mask1) #This mask is for frame_t
         # ipdb.set_trace()
 
-        cv2.imwrite("mask1.png", img1_gray_masked)
+        # cv2.imwrite("mask1.png", img1_gray_masked)
 
         image_mask2=np.zeros(img1_gray.shape,np.uint8)
         # import ipdb;ipdb.set_trace()
@@ -179,7 +179,7 @@ def SuperGlueDetection(img1, img2, sg_matching,rect1=None ,rect2=None,debug=Fals
             image_mask2[int(candidate_tl[1]):int(candidate_br[1]),int(candidate_tl[0]):int(candidate_br[0])]=255
         img2_gray_masked=cv2.bitwise_and(img2_gray,image_mask2) #This mask is for frame_t_11
 
-        cv2.imwrite("mask2.png", img2_gray_masked)
+        # cv2.imwrite("mask2.png", img2_gray_masked)
 
     # This condi
     if rect1 is not None: 
