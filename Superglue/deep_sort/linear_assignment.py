@@ -385,7 +385,7 @@ def min_cost_matching_sg(distance_metric, max_distance, tracks, detections, fram
 
 
 def min_cost_matching_sg_iou(distance_metric1,distance_metric2 ,max_distance, tracks, detections, frame_t, frame_t_1, 
-            track_indices=None,detection_indices=None,kf=None,use_gated=True):
+            track_indices=None,detection_indices=None,kf=None,use_gated=True,lambda_=0.75):
     """Solve linear assignment problem.
 
     Parameters
@@ -431,7 +431,7 @@ def min_cost_matching_sg_iou(distance_metric1,distance_metric2 ,max_distance, tr
 
     cost_matrix1 = distance_metric1(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices)
     cost_matrix2 = distance_metric2(tracks, detections, frame_t, frame_t_1, track_indices, detection_indices)
-    cost_matrix=lambda_
+    cost_matrix=(1-lambda_)*distance_metric1+lambda_*distance_metric2
     #testing without it 
     if use_gated:
         cost_matrix = gate_cost_matrix(
