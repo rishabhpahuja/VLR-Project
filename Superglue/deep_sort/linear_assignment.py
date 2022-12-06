@@ -102,7 +102,7 @@ def matching_cascade_using_two_metrics(distance_metric1,distance_metric2 ,max_di
         if len(track_indices_l) == 0:  # Nothing to match at this level
             continue
 
-        matches_l1, _, unmatched_detections1 = \
+        matches_l, _, unmatched_detections1 = \
             min_cost_matching_two_metrics(
                 distance_metric1, max_distance1,distance_metric2, max_distance2 ,tracks, detections,
                 track_indices_l, unmatched_detections)
