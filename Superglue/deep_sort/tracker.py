@@ -45,7 +45,7 @@ class Tracker:
 # done
 # n_init - itni der ke andar detect nahi hua to deleted
 # max_age - itni der tak nahi dikha toh uda dega 
-    def __init__(self, metric, max_iou_distance=0.7, max_age=75, n_init=1,max_sg_distance=0.48):
+    def __init__(self, metric, max_iou_distance=0.1, max_age=75, n_init=3,max_sg_distance=0.48):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
@@ -224,7 +224,7 @@ class Tracker:
         if False: #if True, occlussion csses will be dealt by IOU and superglue both
             matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg_iou(\
                     distance_metric1= sg.Superglue_cost, \
-                    distance_metric1= iou_matching.iou_cost,\
+                    distance_metric2= iou_matching.iou_cost,\
                     max_distance= self.max_sg_distance, \
                     tracks= self.tracks, \
                     detections= detections, \

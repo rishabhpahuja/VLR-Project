@@ -20,7 +20,7 @@ import ipdb
 
 detector = Detector(classes = [0]) # it'll detect ONLY [person,horses,sports ball]. class = None means detect all classes. List info at: "data/coco.yaml"
 detector.load_model('./yolov7x.pt')
-video_path='./test_video/Stepladder_work.MP4'
+video_path='./test_video/Pedestrian-9.mp4'
 YOLOVER='V7'
 
 
@@ -35,7 +35,7 @@ tracker=YOLOv7_DeepSORT(reID_model_path="./deep_sort/model_weights/mars-small128
 
 # ipdb.set_trace()
 date = datetime.datetime.now()
-experiment_name = "COS-SG-IOU-filtered"
+experiment_name = "pedCOS-SG-IOU-filtered-io01nms1nint3mage75"
 exp_directory = experiment_name #+ '_' + date.strftime("%m-%d_%H:%M:%S")
 curr_dir=os.getcwd()+'/Tests/'
 exp_directory=os.path.join('./Tests', exp_directory)

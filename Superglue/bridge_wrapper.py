@@ -184,8 +184,8 @@ class YOLOv7_DeepSORT:
                     cv2.rectangle(frame,(int(tlbr_det[0]), int(tlbr_det[1])), (int(tlbr_det[2]), int(tlbr_det[3])), (255,0,0), 5)
 
             for track in self.tracker.tracks:  # update new findings AKA tracks  
-                if not track.is_confirmed() or track.time_since_update > 1:
-                    continue 
+                # if not track.is_confirmed() or track.time_since_update > 1:
+                #     continue 
                 bbox = track.to_tlbr()
                 class_name = track.get_class()
 
@@ -193,9 +193,9 @@ class YOLOv7_DeepSORT:
                 # color = [i * 255 for i in color]
                 color = (0,255,0) # changed code 
                 text_color=(255,255,255)
-                # else:
-                #     color=(255,255,255)
-                #     text_color=(0,0,0)
+                if track.time_since_update > 0:
+                    color=(255,255,255)
+                    text_color=(0,0,0)
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color, 2)
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(class_name)+len(str(track.track_id)))*20, int(bbox[1])), color, -1) #To make a solid rectangle box to write text on
                 cv2.putText(frame, class_name + ":" + str(track.track_id),(int(bbox[0]), int(bbox[1]-11)),0, 0.8, (text_color),2, lineType=cv2.LINE_AA)  
