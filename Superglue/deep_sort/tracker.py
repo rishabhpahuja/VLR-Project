@@ -170,7 +170,7 @@ class Tracker:
             # matches_b,unmatched_tracks_b,unmatched_detections=linear_assignment.min_cost_matching_sg(\
             #     self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
             #     detections, self.frame_t, self.frame_t_1, confirmed_tracks,kf=self.kf)
-            matches_b,unmatched_tracks_b,unmatched_detections=linear_assignment.min_cost_matching_sg(\
+            matches_b,unmatched_tracks_b,unmatched_detections_b=linear_assignment.min_cost_matching_sg(\
                     distance_metric= sg.Superglue_cost, \
                     max_distance= self.max_sg_distance, \
                     tracks= self.tracks, \
@@ -178,7 +178,7 @@ class Tracker:
                     frame_t= self.frame_t, \
                     frame_t_1= self.frame_t_1, \
                     track_indices= sg_track_candidates,\
-                    detection_indices= unmatched_detections,
+                    detection_indices= unmatched_detections_a,
                     kf = self.kf,use_gated=False)
         
         if False: #If true superglue and cosine will be used both for cascade matching
@@ -212,13 +212,13 @@ class Tracker:
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
         if True: #IOU mtric will be used for IOU matching
             # #ipdb.set_trace()
-            matches_b, unmatched_tracks_b, unmatched_detections = linear_assignment.min_cost_matching(\
+            matches_c, unmatched_tracks_c, unmatched_detections_c = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
-                detections, iou_track_candidates, unmatched_detections)
+                detections, iou_track_candidates, unmatched_detections_b)
             # checks for 1 after the other
-            matches = matches_a + matches_b
+            matches = matches_a + matches_b+matches_c
             # print(matches)
-            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b+unmatched_tracks_c))
             #ipdb.set_trace()
         
         if False: #if True, occlussion csses will be dealt by IOU and superglue both
@@ -237,7 +237,7 @@ class Tracker:
             
             matches=matches_a+matches_c+matches_b
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
-        return matches, unmatched_tracks, unmatched_detections
+        return matches, unmatched_tracks, unmatched_detections_c
 #done
     def _initiate_track(self, detection):
         mean, covariance = self.kf.initiate(detection.to_xyah())

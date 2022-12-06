@@ -35,7 +35,7 @@ tracker=YOLOv7_DeepSORT(reID_model_path="./deep_sort/model_weights/mars-small128
 
 # ipdb.set_trace()
 date = datetime.datetime.now()
-experiment_name = "COS-SG-IOU-min"
+experiment_name = "COS-SG-IOU-filtered"
 exp_directory = experiment_name #+ '_' + date.strftime("%m-%d_%H:%M:%S")
 curr_dir=os.getcwd()+'/Tests/'
 exp_directory=os.path.join('./Tests', exp_directory)
