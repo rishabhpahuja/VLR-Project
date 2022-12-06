@@ -97,6 +97,8 @@ class YOLOv7_DeepSORT:
                 break
             frame_num +=1
             # #ipdb.set_trace()
+            if frame_num<400:
+                continue
 
             if skip_frames and not frame_num % skip_frames: 
                 continue # skip every nth frame. When every frame is not important, you can use this to fasten the process
@@ -166,6 +168,7 @@ class YOLOv7_DeepSORT:
             detections = [Detection(bbox, score, class_name, feature) for bbox, score, class_name, feature in zip(yolo_dets, scores, names, features)] 
             # [No of BB per frame] deep_sort.detection.Detection object - len = 7
             # each detection is then taken individually and zipped with related values like scre, name and features.
+            
 
             cmap = plt.get_cmap('tab20b') #initialize color map
             colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]   # can't detect more than 20 at once ??
@@ -202,7 +205,12 @@ class YOLOv7_DeepSORT:
                 cv2.putText(frame, "Frame_num:"+str(frame_num),(len(frame[0])-300,len(frame)-100),0, 1.2, (255,255,255),2, lineType=cv2.LINE_AA)  
                 if verbose == 2:
                     print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-                    
+
+
+            # Printing Yolo Detections on frame
+            color = (0,0,255)
+            for bbox in yolo_dets:
+                cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[0])+int(bbox[2]),int(bbox[1])+ int(bbox[3])), color, 2)      
             # -------------------------------- Tracker work ENDS here -----------------------------------------------------------------------
             # for track in unmatched_tracks:
             # #ipdb.set_trace()

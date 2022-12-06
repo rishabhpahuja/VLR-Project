@@ -165,7 +165,7 @@ class Tracker:
                 linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
                     self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
         
-        if True:#Cascading matchign will be done using superglue
+        if False:#Cascading matchign will be done using superglue
             # #ipdb.set_trace()
             # matches_b,unmatched_tracks_b,unmatched_detections=linear_assignment.min_cost_matching_sg(\
             #     self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
@@ -185,7 +185,12 @@ class Tracker:
             matches_a, unmatched_tracks_a, unmatched_detections = \
                 linear_assignment.matching_cascade_using_two_metrics(gated_metric,sg.Superglue_cost,self.metric.matching_threshold, \
                 self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-        
+        if True: #If true IOU will be used
+            matches_b, unmatched_tracks_b, unmatched_detections_b = linear_assignment.min_cost_matching(\
+                iou_matching.iou_cost, self.max_iou_distance, self.tracks,
+                detections, sg_track_candidates, unmatched_detections_a)
+
+
         # Associate remaining tracks together with unconfirmed tracks using IOU.
         iou_track_candidates = unmatched_tracks_sg + [
             k for k in unmatched_tracks_b if
@@ -196,8 +201,8 @@ class Tracker:
 
         
         # #ipdb.set_trace()
-        if False: #if True, iou matching will be done usign superglue
-            matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg(\
+        if True: #if True, iou matching will be done usign superglue
+            matches_c,unmatched_tracks_c,unmatched_detections_c=linear_assignment.min_cost_matching_sg(\
                     distance_metric= sg.Superglue_cost, \
                     max_distance= self.max_sg_distance, \
                     tracks= self.tracks, \
@@ -205,12 +210,12 @@ class Tracker:
                     frame_t= self.frame_t, \
                     frame_t_1= self.frame_t_1, \
                     track_indices= iou_track_candidates,\
-                    detection_indices= unmatched_detections,
-                    kf = self.kf,gated_metric=False)
+                    detection_indices= unmatched_detections_b,
+                    kf = self.kf,use_gated=False)
             
             matches=matches_a+matches_c+matches_b
             unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
-        if True: #IOU mtric will be used for IOU matching
+        if False: #IOU mtric will be used for IOU matching
             # #ipdb.set_trace()
             matches_c, unmatched_tracks_c, unmatched_detections_c = linear_assignment.min_cost_matching(\
                 iou_matching.iou_cost, self.max_iou_distance, self.tracks,
