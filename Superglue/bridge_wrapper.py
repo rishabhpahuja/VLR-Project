@@ -229,9 +229,9 @@ class YOLOv7_DeepSORT:
             #      name=dir_path+'0'+str(frame_num)+'.png'
             # elif frame_num >999 and frame_num < 10000:
             #      name=dir_path+str(frame_num)+'.png'
-            if frame_num<1000:
+            if frame_num<10000:
                 
-                name=str(frame_num).zfill(4)+'.png'
+                name=str(frame_num).zfill(5)+'.png'
                 name=os.path.join(dir_path,  name)
                 print(name)
             cv2.imwrite(name,frame)
