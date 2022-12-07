@@ -1,4 +1,5 @@
 # vim: expandtab:ts=4:sw=4
+from __future__ import absolute_import
 import numpy as np
 from . import kalman_filter
 from . import linear_assignment
@@ -10,7 +11,6 @@ import sys
 sys.path.insert(2,"./models")
 import Run_Superglue as sg
 from Run_Superglue import SuperGlueClass
-import ipdb
 
 
 class Tracker:
@@ -42,31 +42,28 @@ class Tracker:
         The list of active tracks at the current time step.
 
     """
-# done
-# n_init - itni der ke andar detect nahi hua to deleted
-# max_age - itni der tak nahi dikha toh uda dega 
-    def __init__(self, metric, max_iou_distance=0.1, max_age=75, n_init=3,max_sg_distance=0.48):
+    #Working self, metric, max_iou_distance=0.4, max_age=75, n_init=3,max_sg_distance=0.5
+    #self, metric, max_iou_distance=0.3, max_age=75, n_init=5,max_sg_distance=0.3
+
+    def __init__(self, metric, max_iou_distance=0.5, max_age=75, n_init=8,max_sg_distance=0.3):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
         self.n_init = n_init
         self.max_sg_distance=max_sg_distance
+
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
         self._next_id = 1
-        self.frame_t = None
-        self.frame_t_1 = None
         self.sg_object=SuperGlueClass()
 
-    def predict(self, prev_frame, frame):
+    def predict(self,prev_frame, frame):
         """Propagate track state distributions one time step forward.
 
         This function should be called once every time step, before `update`.
         """
-        # import ipdb;#ipdb.set_trace()
         self.frame_t = prev_frame # t
         self.frame_t_1 = frame # t+1
-
         for track in self.tracks:
             track.predict(self.kf)
 
@@ -80,8 +77,8 @@ class Tracker:
 
         """
         # Run matching cascade.
-        matches, unmatched_tracks, unmatched_detections = self._match(detections)
-        #initially all unmatched - thus, unmatched detctions - [0, 1, 2, 3, 4, 5, 6]
+        matches, unmatched_tracks, unmatched_detections = \
+            self._match(detections)
 
         # Update track set.
         for track_idx, detection_idx in matches:
@@ -90,11 +87,10 @@ class Tracker:
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
         for detection_idx in unmatched_detections:
-            self._initiate_track(detections[detection_idx]) # saare naye detection ka naya track and id created 
-            # [0, 1, 2, 3, 4, 5, 6]
-
+            self._initiate_track(detections[detection_idx])
         UNMATCHED_TRACKS=[self.tracks[i] for i in unmatched_tracks]
         UNMACTHED_DETECTIONS=[detections[i] for i in unmatched_detections] # detctions ka object
+        
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
@@ -108,15 +104,11 @@ class Tracker:
             track.features = []
         self.metric.partial_fit(
             np.asarray(features), np.asarray(targets), active_targets)
-        
         return UNMATCHED_TRACKS,UNMACTHED_DETECTIONS
 
     def _match(self, detections):
 
-        # #ipdb.set_trace()
-
         def gated_metric(tracks, dets, track_indices, detection_indices):
-            # #ipdb.set_trace()
             features = np.array([dets[i].feature for i in detection_indices])
             targets = np.array([tracks[i].track_id for i in track_indices])
             cost_matrix = self.metric.distance(features, targets)
@@ -127,127 +119,91 @@ class Tracker:
             return cost_matrix
 
         # Split track set into confirmed and unconfirmed tracks.
-        # #ipdb.set_trace()
-        confirmed_tracks = [i for i, t in enumerate(self.tracks) if t.is_confirmed()]
-        unconfirmed_tracks = [i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
+        confirmed_tracks = [
+            i for i, t in enumerate(self.tracks) if t.is_confirmed()]
+        unconfirmed_tracks = [
+            i for i, t in enumerate(self.tracks) if not t.is_confirmed()]
 
-        # First Cacade 
-
-        # Associate confirmed tracks using appearance features.
-        if True: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
-            matches_a, unmatched_tracks_a, unmatched_detections_a = \
-                linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
-                    self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-        
-        if False:#Cascading matchign will be done using superglue
-            # #ipdb.set_trace()
-            matches_a,unmatched_tracks_a,unmatched_detections=linear_assignment.matching_cascade_sg(\
-                self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
-                detections, self.frame_t, self.frame_t_1, confirmed_tracks,kf=self.kf)
-        
-        if False: #If true superglue and cosine will be used both for cascade matching
+        if False:# Just DeepSORT Implementation            
+            # Associate confirmed tracks using appearance features.
             matches_a, unmatched_tracks_a, unmatched_detections = \
-                linear_assignment.matching_cascade_using_two_metrics(gated_metric,sg.Superglue_cost,self.metric.matching_threshold, \
-                self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-        
-        # Associate remaining tracks together with unconfirmed tracks using IOU.
-        sg_track_candidates = unconfirmed_tracks + [
-            k for k in unmatched_tracks_a if
-            self.tracks[k].time_since_update == 1]
-        unmatched_tracks_sg = [
-            k for k in unmatched_tracks_a if
-            self.tracks[k].time_since_update != 1]
-        # Second Cacade  Use Supeglue
+                linear_assignment.matching_cascade(
+                    gated_metric, self.metric.matching_threshold, self.max_age,
+                    self.tracks, detections, confirmed_tracks)
 
-        # Associate confirmed tracks using appearance features.
-        if False: #If True, normal cosine distance cascading matching will be done. If false, cascadign matchign will be done usign superglue
+            # Associate remaining tracks together with unconfirmed tracks using IOU.
+            iou_track_candidates = unconfirmed_tracks + [
+                k for k in unmatched_tracks_a if
+                self.tracks[k].time_since_update == 1]
+            unmatched_tracks_a = [
+                k for k in unmatched_tracks_a if
+                self.tracks[k].time_since_update != 1]
+            matches_b, unmatched_tracks_b, unmatched_detections = \
+                linear_assignment.min_cost_matching(
+                    iou_matching.iou_cost, self.max_iou_distance, self.tracks,
+                    detections, iou_track_candidates, unmatched_detections)
+
+            matches = matches_a + matches_b
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
+            return matches, unmatched_tracks, unmatched_detections
+
+        if True:
+                # Three Cascade Implementation
+    # ************************************************ COSINE Matching ***************************************
+            # Associate confirmed tracks using appearance features.
             matches_a, unmatched_tracks_a, unmatched_detections = \
-                linear_assignment.matching_cascade(gated_metric, self.metric.matching_threshold, self.max_age,
-                    self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-        
-        if False:#Cascading matchign will be done using superglue
-            # #ipdb.set_trace()
-            # matches_b,unmatched_tracks_b,unmatched_detections=linear_assignment.min_cost_matching_sg(\
-            #     self.sg_object.Superglue_cost, self.max_sg_distance, self.max_age,self.tracks,
-            #     detections, self.frame_t, self.frame_t_1, confirmed_tracks,kf=self.kf)
-            matches_b,unmatched_tracks_b,unmatched_detections_b=linear_assignment.min_cost_matching_sg(\
-                    distance_metric= sg.Superglue_cost, \
-                    max_distance= self.max_sg_distance, \
-                    tracks= self.tracks, \
-                    detections= detections, \
-                    frame_t= self.frame_t, \
-                    frame_t_1= self.frame_t_1, \
-                    track_indices= sg_track_candidates,\
-                    detection_indices= unmatched_detections_a,
-                    kf = self.kf,use_gated=False)
-        
-        if False: #If true superglue and cosine will be used both for cascade matching
-            matches_a, unmatched_tracks_a, unmatched_detections = \
-                linear_assignment.matching_cascade_using_two_metrics(gated_metric,sg.Superglue_cost,self.metric.matching_threshold, \
-                self.max_sg_distance,self.max_age,self.tracks, detections, confirmed_tracks) # sends gated_metric ka functions
-        if True: #If true IOU will be used
-            matches_b, unmatched_tracks_b, unmatched_detections_b = linear_assignment.min_cost_matching(\
-                iou_matching.iou_cost, self.max_iou_distance, self.tracks,
-                detections, sg_track_candidates, unmatched_detections_a)
+                linear_assignment.matching_cascade(
+                    gated_metric, self.metric.matching_threshold, self.max_age,
+                    self.tracks, detections, confirmed_tracks)
+
+            # Associate remaining tracks together with unconfirmed tracks using IOU.
+            iou_track_candidates = unconfirmed_tracks + [
+                k for k in unmatched_tracks_a if
+                self.tracks[k].time_since_update == 1]
+            unmatched_tracks_a = [
+                k for k in unmatched_tracks_a if
+                self.tracks[k].time_since_update != 1]
 
 
-        # Associate remaining tracks together with unconfirmed tracks using IOU.
-        iou_track_candidates = unmatched_tracks_sg + [
-            k for k in unmatched_tracks_b if
-            self.tracks[k].time_since_update == 1]
-        unmatched_tracks_iou = [
-            k for k in unmatched_tracks_b if
-            self.tracks[k].time_since_update != 1]
+    # *************************** Matching Using SuperGlue Cost 
 
-        
-        # #ipdb.set_trace()
-        if True: #if True, iou matching will be done usign superglue
-            matches_c,unmatched_tracks_c,unmatched_detections_c=linear_assignment.min_cost_matching_sg(\
-                    distance_metric= sg.Superglue_cost, \
-                    max_distance= self.max_sg_distance, \
-                    tracks= self.tracks, \
-                    detections= detections, \
-                    frame_t= self.frame_t, \
-                    frame_t_1= self.frame_t_1, \
-                    track_indices= iou_track_candidates,\
-                    detection_indices= unmatched_detections_b,
-                    kf = self.kf,use_gated=False)
+
+            if True: #if True, matching will be done usign superglue
+                matches_sg,unmatched_tracks_sg,unmatched_detections=linear_assignment.min_cost_matching_sg(\
+                        distance_metric= self.sg_object.Superglue_cost, \
+                        max_distance= self.max_sg_distance, \
+                        tracks= self.tracks, \
+                        detections= detections, \
+                        frame_t= self.frame_t, \
+                        frame_t_1= self.frame_t_1, \
+                        track_indices= iou_track_candidates,\
+                        detection_indices= unmatched_detections,
+                        kf = self.kf,use_gated=False)
+            # Associate remaining tracks together with unconfirmed tracks using IOU.
+                iou_track_candidates =  [
+                    k for k in unmatched_tracks_sg if
+                    self.tracks[k].time_since_update == 1]
+                unmatched_tracks_sg = [
+                    k for k in unmatched_tracks_sg if
+                    self.tracks[k].time_since_update != 1]
             
-            matches=matches_a+matches_c+matches_b
-            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
-        if False: #IOU mtric will be used for IOU matching
-            # #ipdb.set_trace()
-            matches_c, unmatched_tracks_c, unmatched_detections_c = linear_assignment.min_cost_matching(\
-                iou_matching.iou_cost, self.max_iou_distance, self.tracks,
-                detections, iou_track_candidates, unmatched_detections_b)
-            # checks for 1 after the other
-            matches = matches_a + matches_b+matches_c
-            # print(matches)
-            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b+unmatched_tracks_c))
-            #ipdb.set_trace()
-        
-        if False: #if True, occlussion csses will be dealt by IOU and superglue both
-            matches_c,unmatched_tracks_c,unmatched_detections=linear_assignment.min_cost_matching_sg_iou(\
-                    distance_metric1= sg.Superglue_cost, \
-                    distance_metric2= iou_matching.iou_cost,\
-                    max_distance= self.max_sg_distance, \
-                    tracks= self.tracks, \
-                    detections= detections, \
-                    frame_t= self.frame_t, \
-                    frame_t_1= self.frame_t_1, \
-                    track_indices= iou_track_candidates,\
-                    detection_indices= unmatched_detections,
-                    kf = self.kf,gated_metric=False,
-                    lambda_=0.75)
-            
-            matches=matches_a+matches_c+matches_b
-            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_c+unmatched_tracks_b))
-        return matches, unmatched_tracks, unmatched_detections_c
-#done
+
+
+            # Adding SuperGlue Cost 
+
+            matches_b, unmatched_tracks_b, unmatched_detections = \
+                linear_assignment.min_cost_matching(
+                    iou_matching.iou_cost, self.max_iou_distance, self.tracks,
+                    detections, iou_track_candidates, unmatched_detections)
+
+            matches = matches_a + matches_b+matches_sg
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b+unmatched_tracks_sg))
+            return matches, unmatched_tracks, unmatched_detections
+
     def _initiate_track(self, detection):
         mean, covariance = self.kf.initiate(detection.to_xyah())
         class_name = detection.get_class()
         self.tracks.append(Track(
             mean, covariance, self._next_id, self.n_init, self.max_age,
-            detection.feature, class_name)) # track gets initiated and appended 
-        self._next_id += 1 # id updates taken - for each track is unique
+            detection.feature,class_name))
+        self._next_id += 1

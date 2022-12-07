@@ -1,7 +1,7 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
 
-#done
+
 class Detection(object):
     """
     This class represents a bounding box detection in a single image.
@@ -21,21 +21,19 @@ class Detection(object):
         Bounding box in format `(top left x, top left y, width, height)`.
     confidence : ndarray
         Detector confidence score.
-    class_name : ndarray
-        Detector class.
     feature : ndarray | NoneType
         A feature vector that describes the object contained in this image.
 
     """
 
-    def __init__(self, tlwh, confidence, class_name, feature):
-        self.tlwh = np.asarray(tlwh, dtype=np.float) # bounding box 
-        self.confidence = float(confidence) # score value for each bounding box
-        self.class_name = class_name # same as apple
-        self.feature = np.asarray(feature, dtype=np.float32) # this is the deep sort feature found for the detction
-
+    def __init__(self, tlwh, confidence,class_name, feature):
+        self.tlwh = np.asarray(tlwh, dtype=np.float)
+        self.confidence = float(confidence)
+        self.class_name = class_name
+        
+        self.feature = np.asarray(feature, dtype=np.float32)
     def get_class(self):
-        return self.class_name # apple it will be
+        return self.class_name
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
