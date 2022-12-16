@@ -1,4 +1,4 @@
-# VLR-Project
+# SuperDeepSort
 This repository is used for the project "SuperDeepSort" for Visual Learning and Recognition (CMU-16824) (Class Link: https://visual-learning.cs.cmu.edu/hw1.html)
 
 **A.** In this project we are trying to incorporate superglue in deep sort for re-association of objects. We are trying different methods of incorporating superglue algorithm in the baseline. We tried the following things:
